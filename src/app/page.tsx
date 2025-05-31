@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useCallback } from 'react';
@@ -25,8 +26,8 @@ export default function POSPage() {
       return [...prevOrderItems, { menuItemId: item.id, name: item.name, price: item.price, quantity: 1 }];
     });
     toast({
-      title: `${item.name} added to order`,
-      description: `Price: $${item.price.toFixed(2)}`,
+      title: `تمت إضافة ${item.name} إلى الطلب`,
+      description: `السعر: ${item.price.toFixed(0)} ل.س`,
       variant: "default",
       duration: 3000,
     });
@@ -53,43 +54,41 @@ export default function POSPage() {
   const handleCheckout = useCallback(() => {
     if (currentOrderItems.length === 0) {
       toast({
-        title: "Empty Order",
-        description: "Please add items to your order before checkout.",
+        title: "الطلب فارغ",
+        description: "الرجاء إضافة عناصر إلى طلبك قبل الدفع.",
         variant: "destructive",
       });
       return;
     }
-    // Mock payment processing and order saving
     const orderTotal = currentOrderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
     
     console.log("Order Placed:", {
       items: currentOrderItems,
-      total: orderTotal.toFixed(2),
+      total: orderTotal.toFixed(0),
       timestamp: new Date().toISOString(),
     });
 
     toast({
-      title: "Order Placed Successfully!",
-      description: `Total: $${orderTotal.toFixed(2)}. Receipt is being "printed".`,
+      title: "تم إرسال الطلب بنجاح!",
+      description: `الإجمالي: ${orderTotal.toFixed(0)} ل.س. يتم "طباعة" الفاتورة.`,
       variant: "default",
     });
 
-    // Mock receipt printing
-    console.log("--- RECEIPT ---");
+    console.log("--- فاتورة ---");
     currentOrderItems.forEach(item => {
-      console.log(`${item.name} x ${item.quantity} - $${(item.price * item.quantity).toFixed(2)}`);
+      console.log(`${item.name} x ${item.quantity} - ${(item.price * item.quantity).toFixed(0)} ل.س`);
     });
-    console.log(`TOTAL: $${orderTotal.toFixed(2)}`);
+    console.log(`الإجمالي: ${orderTotal.toFixed(0)} ل.س`);
     console.log("-----------------");
 
-    setCurrentOrderItems([]); // Clear the cart
+    setCurrentOrderItems([]); 
   }, [currentOrderItems, toast]);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8 h-[calc(100vh-var(--header-height,100px)-4rem)]"> {/* Adjust header height assumption */}
-      <div className="lg:w-3/5 xl:w-2/3 h-full">
-        <h2 className="font-headline text-3xl mb-6 text-primary">Menu</h2>
-        <ScrollArea className="h-[calc(100%-4rem)] pr-4"> {/* Adjust for h2 height */}
+    <div className="flex flex-col lg:flex-row gap-8 flex-grow">
+      <div className="lg:w-3/5 xl:w-2/3 h-full flex flex-col">
+        <h2 className="font-headline text-3xl mb-6 text-primary shrink-0">القائمة</h2>
+        <ScrollArea className="flex-grow pe-4 min-h-0">
           {menuItems.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {menuItems.map((item) => (
@@ -97,7 +96,7 @@ export default function POSPage() {
               ))}
             </div>
           ) : (
-             <p className="text-muted-foreground text-center py-10">No menu items available at the moment.</p>
+             <p className="text-muted-foreground text-center py-10">لا توجد عناصر متاحة في القائمة حاليًا.</p>
           )}
         </ScrollArea>
       </div>

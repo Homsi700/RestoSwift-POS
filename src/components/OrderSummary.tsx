@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { OrderItem } from '@/types';
@@ -36,26 +37,25 @@ export default function OrderSummary({ orderItems, onRemoveItem, onUpdateQuantit
     }
   };
 
-
   return (
     <Card className="shadow-lg h-full flex flex-col">
       <CardHeader>
-        <CardTitle className="font-headline text-2xl">Current Order</CardTitle>
+        <CardTitle className="font-headline text-2xl">الطلب الحالي</CardTitle>
       </CardHeader>
       <CardContent className="flex-grow overflow-hidden p-0">
-        <ScrollArea className="h-[calc(100%-0px)] p-4"> {/* Adjust height as needed */}
+        <ScrollArea className="h-full p-4">
           {orderItems.length === 0 ? (
-            <p className="text-muted-foreground text-center py-10">Your order is empty. Add items from the menu.</p>
+            <p className="text-muted-foreground text-center py-10">طلبك فارغ. أضف عناصر من القائمة.</p>
           ) : (
             <ul className="space-y-3">
               {orderItems.map((item) => (
                 <li key={item.menuItemId} className="flex items-center justify-between p-3 bg-card-foreground/5 rounded-md">
                   <div className="flex-grow">
                     <p className="font-semibold">{item.name}</p>
-                    <p className="text-sm text-muted-foreground">${item.price.toFixed(2)} each</p>
+                    <p className="text-sm text-muted-foreground">{item.price.toFixed(0)} ل.س لكل قطعة</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon" onClick={() => handleQuantityChange(item.menuItemId, item.quantity, -1)} aria-label={`Decrease quantity of ${item.name}`}>
+                    <Button variant="ghost" size="icon" onClick={() => handleQuantityChange(item.menuItemId, item.quantity, -1)} aria-label={`تخفيض كمية ${item.name}`}>
                       <MinusCircle size={18} />
                     </Button>
                     <Input 
@@ -63,14 +63,14 @@ export default function OrderSummary({ orderItems, onRemoveItem, onUpdateQuantit
                       value={item.quantity} 
                       onChange={(e) => handleManualQuantityChange(item.menuItemId, e.target.value)} 
                       className="w-12 h-8 text-center"
-                      aria-label={`Quantity of ${item.name}`}
+                      aria-label={`كمية ${item.name}`}
                     />
-                    <Button variant="ghost" size="icon" onClick={() => handleQuantityChange(item.menuItemId, item.quantity, 1)} aria-label={`Increase quantity of ${item.name}`}>
+                    <Button variant="ghost" size="icon" onClick={() => handleQuantityChange(item.menuItemId, item.quantity, 1)} aria-label={`زيادة كمية ${item.name}`}>
                       <PlusCircle size={18} />
                     </Button>
                   </div>
-                  <p className="w-20 text-right font-semibold">${(item.price * item.quantity).toFixed(2)}</p>
-                  <Button variant="ghost" size="icon" onClick={() => onRemoveItem(item.menuItemId)} className="text-destructive hover:text-destructive/80" aria-label={`Remove ${item.name} from order`}>
+                  <p className="w-24 text-right font-semibold">{(item.price * item.quantity).toFixed(0)} ل.س</p>
+                  <Button variant="ghost" size="icon" onClick={() => onRemoveItem(item.menuItemId)} className="text-destructive hover:text-destructive/80" aria-label={`إزالة ${item.name} من الطلب`}>
                     <Trash2 size={18} />
                   </Button>
                 </li>
@@ -82,11 +82,11 @@ export default function OrderSummary({ orderItems, onRemoveItem, onUpdateQuantit
       {orderItems.length > 0 && (
         <CardFooter className="flex flex-col gap-4 p-4 border-t">
           <div className="w-full flex justify-between items-center text-xl font-bold">
-            <span>Total:</span>
-            <span className="text-primary">${totalAmount.toFixed(2)}</span>
+            <span>الإجمالي:</span>
+            <span className="text-primary">{totalAmount.toFixed(0)} ل.س</span>
           </div>
-          <Button onClick={onCheckout} className="w-full text-lg py-6" size="lg" aria-label="Proceed to payment">
-            <CreditCard size={22} className="mr-2" /> Pay / Complete Order
+          <Button onClick={onCheckout} className="w-full text-lg py-6" size="lg" aria-label="الانتقال إلى الدفع">
+            <CreditCard size={22} className="ms-2" /> دفع / إكمال الطلب
           </Button>
         </CardFooter>
       )}

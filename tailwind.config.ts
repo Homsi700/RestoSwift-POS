@@ -1,7 +1,8 @@
+
 import type {Config} from 'tailwindcss';
 
 export default {
-  darkMode: ['class'], // Keep class strategy for potential future use, though default is dark
+  darkMode: ['class'],
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -17,7 +18,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        body: ['PT Sans', 'sans-serif'],
+        body: ['Cairo', 'PT Sans', 'sans-serif'], // Added Cairo for Arabic
         headline: ['Playfair Display', 'serif'],
         code: ['monospace'],
       },

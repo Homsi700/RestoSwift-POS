@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { MenuItem } from '@/types';
@@ -8,7 +9,7 @@ interface MenuContextType {
   menuItems: MenuItem[];
   addMenuItem: (itemData: Omit<MenuItem, 'id' | 'isAvailable' | 'imageUrl'>) => void;
   toggleItemAvailability: (id: string) => void;
-  updateMenuItem: (updatedItem: MenuItem) => void; // Added for potential future editing
+  updateMenuItem: (updatedItem: MenuItem) => void;
   getAvailableItems: () => MenuItem[];
 }
 

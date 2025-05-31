@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -5,16 +6,16 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Label } from '@/components/ui/label'; // Not used directly, FormLabel is used
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PlusSquare } from 'lucide-react';
 import type { MenuItem } from '@/types';
 
 const formSchema = z.object({
-  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
-  price: z.coerce.number().positive({ message: "Price must be a positive number." }),
-  category: z.string().min(2, { message: "Category must be at least 2 characters." }),
+  name: z.string().min(2, { message: "الاسم يجب أن يتكون من حرفين على الأقل." }),
+  price: z.coerce.number().positive({ message: "السعر يجب أن يكون رقمًا موجبًا." }),
+  category: z.string().min(2, { message: "الفئة يجب أن تتكون من حرفين على الأقل." }),
 });
 
 type AddItemFormValues = z.infer<typeof formSchema>;
@@ -42,7 +43,7 @@ export default function AddItemForm({ onAddItem }: AddItemFormProps) {
     <Card className="shadow-lg">
       <CardHeader>
         <CardTitle className="font-headline text-2xl flex items-center gap-2">
-          <PlusSquare size={24} className="text-primary" /> Add New Menu Item
+          <PlusSquare size={24} className="text-primary" /> إضافة عنصر جديد للقائمة
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -53,9 +54,9 @@ export default function AddItemForm({ onAddItem }: AddItemFormProps) {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Item Name</FormLabel>
+                  <FormLabel>اسم العنصر</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Pepperoni Pizza" {...field} />
+                    <Input placeholder="مثال: فروج مشوي" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -66,9 +67,9 @@ export default function AddItemForm({ onAddItem }: AddItemFormProps) {
               name="price"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Price ($)</FormLabel>
+                  <FormLabel>السعر (ل.س)</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" placeholder="e.g., 14.99" {...field} />
+                    <Input type="number" step="100" placeholder="مثال: 25000" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -79,16 +80,16 @@ export default function AddItemForm({ onAddItem }: AddItemFormProps) {
               name="category"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Category</FormLabel>
+                  <FormLabel>الفئة</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Pizza, Drinks, Desserts" {...field} />
+                    <Input placeholder="مثال: بيتزا, مشروبات, حلويات" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <Button type="submit" className="w-full">
-              <PlusSquare size={18} className="mr-2" /> Add Item
+              <PlusSquare size={18} className="ms-2" /> إضافة عنصر
             </Button>
           </form>
         </Form>
