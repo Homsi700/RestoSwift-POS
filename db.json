@@ -79,6 +79,13 @@
       "price": 3000,
       "isAvailable": true,
       "imageUrl": "https://placehold.co/300x200.png?text=ماء"
+    },
+    {
+      "id": "_LQZk-aoBaS8-RMXyqTL_",
+      "name": "بروستد",
+      "price": 80000,
+      "category": "لحوم دجاج",
+      "isAvailable": true
     }
   ],
   "orders": [
@@ -202,6 +209,33 @@
         }
       ],
       "totalAmount": 226000,
+      "status": "completed",
+      "paymentMethod": "cash"
+    },
+    {
+      "id": "aiGIOmUVJgxA0lWraDE89",
+      "timestamp": 1748707939514,
+      "items": [
+        {
+          "menuItemId": "item_8",
+          "name": "شاورما دجاج",
+          "price": 20000,
+          "quantity": 4
+        },
+        {
+          "menuItemId": "item_7",
+          "name": "فروج مشوي",
+          "price": 75000,
+          "quantity": 1
+        },
+        {
+          "menuItemId": "item_9",
+          "name": "فتوش",
+          "price": 15000,
+          "quantity": 1
+        }
+      ],
+      "totalAmount": 170000,
       "status": "completed",
       "paymentMethod": "cash"
     }

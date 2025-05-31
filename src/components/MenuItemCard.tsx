@@ -4,7 +4,7 @@
 import type { MenuItem } from '@/lib/db'; // Use type from db.ts
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlusCircle, Eye, EyeOff, Pencil } from 'lucide-react';
+import { Eye, EyeOff, Pencil } from 'lucide-react'; // PlusCircle removed as it's no longer used
 import { cn } from '@/lib/utils';
 
 interface MenuItemCardProps {
@@ -50,7 +50,7 @@ export default function MenuItemCard({
       className={cn(
         "flex flex-col overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-200",
         !item.isAvailable ? "opacity-60 bg-muted/50" : "bg-card",
-        isPOSCard && item.isAvailable ? "cursor-pointer" : "",
+        isPOSCard && item.isAvailable ? "cursor-pointer select-none" : "", // Added select-none
         isPOSCard && !item.isAvailable ? "cursor-not-allowed" : "",
         "min-w-[130px] max-w-[180px]" // Adjusted size for POS
       )}
@@ -58,6 +58,7 @@ export default function MenuItemCard({
       role={isPOSCard ? "button" : undefined}
       tabIndex={isPOSCard && item.isAvailable ? 0 : undefined}
       aria-disabled={!item.isAvailable}
+      aria-label={isPOSCard && item.isAvailable ? `إضافة ${item.name} للطلب` : item.name}
     >
       <CardHeader className="p-2 pt-3">
         <CardTitle className="font-semibold text-sm truncate text-center leading-tight h-10 flex items-center justify-center">
@@ -72,7 +73,7 @@ export default function MenuItemCard({
         )}
       </CardContent>
       
-      {showAdminControls && ( // Admin controls section from original component
+      {showAdminControls && ( // Admin controls section
         <CardFooter className="p-2 flex flex-col gap-2">
             <div className="flex items-center justify-around space-x-1 rtl:space-x-reverse w-full mb-1">
               <div className="flex items-center space-x-1 rtl:space-x-reverse">
@@ -94,18 +95,7 @@ export default function MenuItemCard({
             </div>
         </CardFooter>
       )}
-      {isPOSCard && item.isAvailable && (
-         <CardFooter className="p-1">
-            <Button 
-                variant="ghost"
-                size="sm"
-                className="w-full h-7 text-xs text-primary hover:bg-primary/10"
-                aria-label={`إضافة ${item.name} للطلب`}
-            >
-                <PlusCircle size={14} className="ms-1" /> إضافة
-            </Button>
-         </CardFooter>
-      )}
+      {/* Redundant "Add" button for POS card has been removed as per user feedback, the whole card is clickable */}
     </Card>
   );
 }
