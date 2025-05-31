@@ -25,7 +25,8 @@ export const MenuProvider = ({ children }: { children: ReactNode }) => {
         ...itemData,
         id: String(Date.now()), // Simple ID generation
         isAvailable: true,
-        imageUrl: `https://placehold.co/300x200.png?text=${encodeURIComponent(itemData.name.substring(0,10))}`,
+        // imageUrl is removed as per new requirement, but field can remain in type for future use
+        // imageUrl: `https://placehold.co/300x200.png?text=${encodeURIComponent(itemData.name.substring(0,10))}`,
       },
     ]);
   }, []);

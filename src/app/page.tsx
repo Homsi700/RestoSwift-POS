@@ -29,7 +29,7 @@ export default function POSPage() {
       title: `تمت إضافة ${item.name} إلى الطلب`,
       description: `السعر: ${item.price.toFixed(0)} ل.س`,
       variant: "default",
-      duration: 3000,
+      duration: 2000,
     });
   }, [toast]);
 
@@ -85,12 +85,12 @@ export default function POSPage() {
   }, [currentOrderItems, toast]);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8 flex-grow">
+    <div className="flex flex-col lg:flex-row gap-6 flex-grow">
       <div className="lg:w-3/5 xl:w-2/3 h-full flex flex-col">
-        <h2 className="font-headline text-3xl mb-6 text-primary shrink-0">القائمة</h2>
-        <ScrollArea className="flex-grow pe-4 min-h-0">
+        <h2 className="font-headline text-3xl mb-4 text-primary shrink-0">القائمة</h2>
+        <ScrollArea className="flex-grow pe-2 min-h-0">
           {menuItems.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
               {menuItems.map((item) => (
                 <MenuItemCard key={item.id} item={item} onAddToCart={handleAddToCart} />
               ))}
