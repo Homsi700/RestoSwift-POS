@@ -1,24 +1,6 @@
-export interface MenuItem {
-  id: string;
-  name: string;
-  price: number;
-  category: string;
-  isAvailable: boolean;
-  imageUrl?: string; // Optional for now
-}
+// This file can be used for types that are shared across client and server
+// and are not specific to the DB schema, or for re-exporting DB types.
 
-export interface OrderItem {
-  menuItemId: string;
-  name: string;
-  quantity: number;
-  price: number; // Price at the time of order
-}
-
-export interface Order {
-  id: string;
-  timestamp: Date;
-  items: OrderItem[];
-  totalAmount: number;
-  status: 'pending' | 'completed' | 'cancelled';
-  paymentMethod: 'cash' | 'card' | 'other'; // Example payment methods
-}
+// Re-exporting types from db.ts for consistency if needed elsewhere,
+// or define UI-specific variations.
+export type { MenuItem, OrderItem, Order } from '@/lib/db';

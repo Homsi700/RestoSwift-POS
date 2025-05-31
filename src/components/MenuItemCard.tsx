@@ -1,90 +1,111 @@
 
 'use client';
 
-import type { MenuItem } from '@/types';
+import type { MenuItem } from '@/lib/db'; // Use type from db.ts
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { PlusCircle, Eye, EyeOff, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface MenuItemCardProps {
   item: MenuItem;
-  onAddToCart?: (item: MenuItem) => void;
+  onClick?: (item: MenuItem) => void; // For POS page: add to cart
+  // Props for Admin page (from existing implementation)
   onToggleAvailability?: (id: string) => void;
   onEdit?: (item: MenuItem) => void;
   showAdminControls?: boolean;
 }
 
-export default function MenuItemCard({ item, onAddToCart, onToggleAvailability, onEdit, showAdminControls = false }: MenuItemCardProps) {
-  const handleToggle = () => {
+export default function MenuItemCard({ 
+  item, 
+  onClick,
+  onToggleAvailability,
+  onEdit,
+  showAdminControls = false
+}: MenuItemCardProps) {
+
+  const handleCardClick = () => {
+    if (onClick && item.isAvailable) {
+      onClick(item);
+    }
+  };
+
+  const handleToggleAdmin = () => {
     if (onToggleAvailability) {
       onToggleAvailability(item.id);
     }
   };
 
-  const handleEdit = () => {
+  const handleEditAdmin = () => {
     if (onEdit) {
       onEdit(item);
     }
   };
 
+  // Determine if the card is for POS (onClick is present) or Admin (showAdminControls is true)
+  const isPOSCard = !!onClick;
+
   return (
-    <Card className={cn(
-      "flex flex-col overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-200",
-      !item.isAvailable && !showAdminControls ? "opacity-60" : "",
-      "min-w-[150px]" // Added min-width for better control in dense grids
-    )}>
+    <Card 
+      className={cn(
+        "flex flex-col overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-200",
+        !item.isAvailable ? "opacity-60 bg-muted/50" : "bg-card",
+        isPOSCard && item.isAvailable ? "cursor-pointer" : "",
+        isPOSCard && !item.isAvailable ? "cursor-not-allowed" : "",
+        "min-w-[130px] max-w-[180px]" // Adjusted size for POS
+      )}
+      onClick={isPOSCard ? handleCardClick : undefined}
+      role={isPOSCard ? "button" : undefined}
+      tabIndex={isPOSCard && item.isAvailable ? 0 : undefined}
+      aria-disabled={!item.isAvailable}
+    >
       <CardHeader className="p-2 pt-3">
-        <CardTitle className="font-headline text-md truncate text-center leading-tight">{item.name}</CardTitle>
+        <CardTitle className="font-semibold text-sm truncate text-center leading-tight h-10 flex items-center justify-center">
+          {item.name}
+        </CardTitle>
       </CardHeader>
       
       <CardContent className="p-2 flex-grow flex flex-col items-center justify-center">
-        <p className="text-sm font-semibold text-primary">{item.price.toFixed(0)} ل.س</p>
-        {!item.isAvailable && !showAdminControls && (
+        <p className="text-xs font-bold text-primary">{item.price.toLocaleString('ar-SY')} ل.س</p>
+        {!item.isAvailable && (
           <p className="text-xs font-semibold text-destructive mt-1">غير متوفر</p>
         )}
       </CardContent>
       
-      <CardFooter className="p-2 flex flex-col gap-2">
-        {showAdminControls && (
-          <div className="flex items-center justify-around space-x-1 rtl:space-x-reverse w-full mb-1">
-            <div className="flex items-center space-x-1 rtl:space-x-reverse">
-              <Switch
-                id={`available-${item.id}`}
-                checked={item.isAvailable}
-                onCheckedChange={handleToggle}
-                aria-label={item.isAvailable ? "تحديد كغير متوفر" : "تحديد كمتوفر"}
-                className="h-5 w-9 data-[state=checked]:bg-primary data-[state=unchecked]:bg-input [&>span]:h-4 [&>span]:w-4 [&>span]:data-[state=checked]:translate-x-4 [&>span]:data-[state=unchecked]:translate-x-0"
-              />
-              <Label htmlFor={`available-${item.id}`} className="text-xs flex items-center gap-1">
-                {item.isAvailable ? <Eye size={14} /> : <EyeOff size={14} />}
-              </Label>
+      {showAdminControls && ( // Admin controls section from original component
+        <CardFooter className="p-2 flex flex-col gap-2">
+            <div className="flex items-center justify-around space-x-1 rtl:space-x-reverse w-full mb-1">
+              <div className="flex items-center space-x-1 rtl:space-x-reverse">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleToggleAdmin}
+                    aria-label={item.isAvailable ? "تحديد كغير متوفر" : "تحديد كمتوفر"}
+                    className="h-7 w-7"
+                >
+                    {item.isAvailable ? <Eye size={14} /> : <EyeOff size={14} />}
+                </Button>
+              </div>
+              {onEdit && (
+                <Button variant="outline" size="icon" onClick={handleEditAdmin} aria-label={`تعديل ${item.name}`} className="h-7 w-7">
+                  <Pencil size={14} />
+                </Button>
+              )}
             </div>
-            {onEdit && (
-              <Button variant="outline" size="icon" onClick={handleEdit} aria-label={`تعديل ${item.name}`} className="h-7 w-7">
-                <Pencil size={14} />
-              </Button>
-            )}
-          </div>
-        )}
-        {onAddToCart && item.isAvailable && (
-          <Button 
-            onClick={() => onAddToCart(item)} 
-            className="w-full h-8 text-xs"
-            size="sm"
-            aria-label={`إضافة ${item.name} للطلب`}
-          >
-            <PlusCircle size={14} className="ms-1" /> إضافة
-          </Button>
-        )}
-         {onAddToCart && !item.isAvailable && !showAdminControls && (
-          <Button disabled className="w-full h-8 text-xs" size="sm">
-            غير متوفر
-          </Button>
-        )}
-      </CardFooter>
+        </CardFooter>
+      )}
+      {isPOSCard && item.isAvailable && (
+         <CardFooter className="p-1">
+            <Button 
+                variant="ghost"
+                size="sm"
+                className="w-full h-7 text-xs text-primary hover:bg-primary/10"
+                aria-label={`إضافة ${item.name} للطلب`}
+            >
+                <PlusCircle size={14} className="ms-1" /> إضافة
+            </Button>
+         </CardFooter>
+      )}
     </Card>
   );
 }

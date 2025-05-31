@@ -1,0 +1,15 @@
+{
+  "menuItems": [
+    { "id": "item_1", "name": "بيتزا مارغريتا", "category": "بيتزا", "price": 25000, "isAvailable": true, "imageUrl": "https://placehold.co/300x200.png?text=بيتزا+مارغريتا" },
+    { "id": "item_2", "name": "برجر لحم", "category": "سندويشات", "price": 35000, "isAvailable": true, "imageUrl": "https://placehold.co/300x200.png?text=برجر+لحم" },
+    { "id": "item_3", "name": "سلطة دجاج", "category": "سلطات", "price": 22000, "isAvailable": true, "imageUrl": "https://placehold.co/300x200.png?text=سلطة+دجاج" },
+    { "id": "item_4", "name": "عصير برتقال", "category": "مشروبات", "price": 10000, "isAvailable": true, "imageUrl": "https://placehold.co/300x200.png?text=عصير+برتقال" },
+    { "id": "item_5", "name": "كولا", "category": "مشروبات", "price": 8000, "isAvailable": true, "imageUrl": "https://placehold.co/300x200.png?text=كولا" },
+    { "id": "item_6", "name": "كيك الشوكولاتة", "category": "حلويات", "price": 18000, "isAvailable": false, "imageUrl": "https://placehold.co/300x200.png?text=كيك+شوكولاتة" },
+    { "id": "item_7", "name": "فروج مشوي", "category": "أطباق رئيسية", "price": 75000, "isAvailable": true, "imageUrl": "https://placehold.co/300x200.png?text=فروج+مشوي" },
+    { "id": "item_8", "name": "شاورما دجاج", "category": "سندويشات", "price": 20000, "isAvailable": true, "imageUrl": "https://placehold.co/300x200.png?text=شاورما+دجاج" },
+    { "id": "item_9", "name": "فتوش", "category": "سلطات", "price": 15000, "isAvailable": true, "imageUrl": "https://placehold.co/300x200.png?text=فتوش" },
+    { "id": "item_10", "name": "ماء معدني", "category": "مشروبات", "price": 3000, "isAvailable": true, "imageUrl": "https://placehold.co/300x200.png?text=ماء" }
+  ],
+  "orders": []
+}
