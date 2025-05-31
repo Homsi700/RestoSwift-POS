@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import MenuItemCardComponent from '@/components/MenuItemCard'; // Renamed to avoid conflict
+import MenuItemCardComponent from '@/components/MenuItemCard'; 
 import { PlusIcon, MinusIcon, TrashIcon, PrinterIcon, ShoppingBagIcon } from '@heroicons/react/24/outline';
 import { Loader2 } from 'lucide-react';
 
@@ -24,7 +24,7 @@ export default function POSPage() {
   const fetchMenu = useCallback(() => {
     startFetchingMenuTransition(async () => {
       try {
-        const items = await getMenuItems(true); // Fetch only available items
+        const items = await getMenuItems(true); 
         setMenuItems(items);
       } catch (error) {
         console.error("Failed to fetch menu items:", error);
@@ -58,10 +58,9 @@ export default function POSPage() {
     setCurrentOrderItems((prevOrderItems) => {
       const updatedOrder = prevOrderItems.map(item =>
         item.menuItemId === itemId
-          ? { ...item, quantity: Math.max(0, item.quantity + delta) } // Ensure quantity doesn't go below 0
+          ? { ...item, quantity: Math.max(0, item.quantity + delta) } 
           : item
       );
-      // Remove item if quantity is 0
       return updatedOrder.filter(item => item.quantity > 0);
     });
   }, []);
@@ -83,11 +82,11 @@ export default function POSPage() {
       printWindow.document.write('<style>');
       printWindow.document.write(`
         @media print {
-          @page { margin: 5mm; size: 80mm auto; } /* Common thermal printer width */
+          @page { margin: 5mm; size: 80mm auto; } 
         }
         body { 
-          font-family: 'Arial', sans-serif; /* Common font */
-          font-size: 10pt; /* Adjust for readability on small receipts */
+          font-family: 'Arial', sans-serif; 
+          font-size: 10pt; 
           margin: 0;
           padding: 5mm;
           direction: rtl;
@@ -111,10 +110,9 @@ export default function POSPage() {
       `);
       printWindow.document.write('</style></head><body>');
       printWindow.document.write('<div class="receipt-header">');
-      printWindow.document.write('<h1>ريستو سويفت</h1>'); // Restaurant Name
-      // Add more details like address, phone if needed
+      printWindow.document.write('<h1>ريستو سويفت</h1>'); 
       printWindow.document.write('</div>');
-      printWindow.document.write(`<p>رقم الفاتورة: ${order.id.substring(0, 8)}</p>`);
+      printWindow.document.write(`<p>رقم الفاتورة: ${order.id}</p>`); // Display numeric ID
       printWindow.document.write(`<p>التاريخ: ${new Date(order.timestamp).toLocaleString('ar-SY', {dateStyle: 'short', timeStyle: 'short'})}</p>`);
       printWindow.document.write('<table><thead><tr>');
       printWindow.document.write('<th class="item-name">الصنف</th><th class="item-qty">كمية</th><th class="item-price">سعر</th><th class="item-total">إجمالي</th>');
@@ -131,7 +129,6 @@ export default function POSPage() {
       printWindow.document.write('<hr>');
       printWindow.document.write('<div class="totals-section">');
       printWindow.document.write(`<div><span>الإجمالي الفرعي:</span> <span>${order.totalAmount.toLocaleString('ar-SY')} ل.س</span></div>`);
-      // Add tax, discount if needed
       printWindow.document.write(`<div><span>الإجمالي الكلي:</span> <span>${order.totalAmount.toLocaleString('ar-SY')} ل.س</span></div>`);
       printWindow.document.write('</div>');
       printWindow.document.write('<hr>');
@@ -140,7 +137,6 @@ export default function POSPage() {
       printWindow.document.close();
       printWindow.focus();
       printWindow.print();
-      // printWindow.close(); // Some browsers might close it too soon
     } else {
       toast({ title: "خطأ في الطباعة", description: "لم يتمكن المتصفح من فتح نافذة الطباعة.", variant: "destructive" });
     }
@@ -156,6 +152,7 @@ export default function POSPage() {
       return;
     }
 
+    // Removed confirmation dialog
     startCompletingOrderTransition(async () => {
       const result = await completeOrderAndPrint(currentOrderItems);
       if ('error' in result) {
@@ -163,7 +160,7 @@ export default function POSPage() {
       } else {
         toast({
           title: "تم إرسال الطلب بنجاح!",
-          description: `الإجمالي: ${result.totalAmount.toLocaleString('ar-SY')} ل.س.`,
+          description: `رقم الفاتورة: ${result.id}. الإجمالي: ${result.totalAmount.toLocaleString('ar-SY')} ل.س.`,
         });
         printReceipt(result);
         setCurrentOrderItems([]);
@@ -174,8 +171,7 @@ export default function POSPage() {
   const totalAmount = calculateTotalAmount();
 
   return (
-    <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-var(--header-height,80px))] max-h-[calc(100vh-var(--header-height,80px))]"> {/* Adjust header height var if needed */}
-      {/* Menu Items Section */}
+    <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-var(--header-height,80px))] max-h-[calc(100vh-var(--header-height,80px))]">
       <div className="lg:w-3/4 xl:w-2/3 flex flex-col p-4 bg-background rounded-lg shadow-md overflow-hidden">
         <h2 className="font-headline text-2xl mb-4 text-primary shrink-0">اختر الأصناف</h2>
         {isFetchingMenu ? (
@@ -205,7 +201,6 @@ export default function POSPage() {
         )}
       </div>
 
-      {/* Order Summary Section */}
       <div className="lg:w-1/4 xl:w-1/3 flex flex-col p-4 bg-card text-card-foreground rounded-lg shadow-md overflow-hidden">
         <CardHeader className="p-0 pb-4">
           <CardTitle className="font-headline text-2xl flex items-center">
@@ -240,7 +235,6 @@ export default function POSPage() {
                             if (!isNaN(newQuantity) && newQuantity >= 0) {
                                 handleUpdateQuantity(item.menuItemId, newQuantity - item.quantity);
                             } else if (e.target.value === '') {
-                                // Allow clearing the input, effectively setting quantity to 0 (will be removed if < 1)
                                 handleUpdateQuantity(item.menuItemId, -item.quantity);
                             }
                         }}

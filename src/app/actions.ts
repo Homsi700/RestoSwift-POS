@@ -1,8 +1,11 @@
+
 // src/app/actions.ts
 'use server';
 
 import { db, type MenuItem, type OrderItem, type Order } from '@/lib/db';
-import { nanoid } from 'nanoid'; // For generating unique IDs
+// nanoid is no longer needed for order IDs but might be for menu item IDs if not user-provided.
+// For now, addMenuItemAction generates nanoid for menu items.
+import { nanoid } from 'nanoid'; 
 
 // Action to get all menu items (available and unavailable for admin, only available for POS)
 export async function getMenuItems(onlyAvailable: boolean = true): Promise<MenuItem[]> {
@@ -14,15 +17,13 @@ export async function getMenuItems(onlyAvailable: boolean = true): Promise<MenuI
 }
 
 // Action to add a new menu item (for manager access)
-// This function might be called from an admin page later
 export async function addMenuItemAction(itemData: Omit<MenuItem, 'id' | 'isAvailable' | 'imageUrl'>): Promise<MenuItem> {
   const newItem: MenuItem = {
-    id: nanoid(), // Generate unique ID
+    id: nanoid(), // Generate unique ID for menu item
     name: itemData.name,
     price: itemData.price,
     category: itemData.category,
-    isAvailable: true, // New items are available by default
-    // imageUrl: itemData.imageUrl || `https://placehold.co/300x200.png?text=${encodeURIComponent(itemData.name.substring(0,10))}`
+    isAvailable: true,
   };
   db.read();
   db.data.menuItems.push(newItem);
@@ -41,7 +42,6 @@ export async function updateMenuItemAction(updatedItem: MenuItem): Promise<MenuI
   }
   return null;
 }
-
 
 // Action to update availability of a menu item
 export async function toggleMenuItemAvailabilityAction(id: string): Promise<MenuItem | null> {
@@ -63,18 +63,22 @@ export async function completeOrderAndPrint(orderItems: OrderItem[]): Promise<Or
 
   const totalAmount = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
+  db.read(); // Read the latest data, including lastOrderId
+
+  const newOrderId = (db.data.lastOrderId || 0) + 1;
+
   const newOrder: Order = {
-    id: nanoid(), // Generate unique ID for the order
+    id: newOrderId, // Use sequential numeric ID
     timestamp: Date.now(),
     items: orderItems,
     totalAmount: totalAmount,
     status: 'completed',
-    paymentMethod: 'cash', // Default for now, can be expanded
+    paymentMethod: 'cash', 
   };
 
   try {
-    db.read();
     db.data.orders.push(newOrder);
+    db.data.lastOrderId = newOrderId; // Update the lastOrderId
     db.write();
     console.log('Order completed and saved:', newOrder);
     return newOrder;

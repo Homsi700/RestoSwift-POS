@@ -90,7 +90,7 @@
   ],
   "orders": [
     {
-      "id": "X_PRbK9yEd9g1kmGH8Mia",
+      "id": 1,
       "timestamp": 1748706355615,
       "items": [
         {
@@ -129,7 +129,7 @@
       "paymentMethod": "cash"
     },
     {
-      "id": "9-uGhyl6UOyCeEarBGcHb",
+      "id": 2,
       "timestamp": 1748706415793,
       "items": [
         {
@@ -168,7 +168,7 @@
       "paymentMethod": "cash"
     },
     {
-      "id": "Z64HXic6OYJhOeiG9ztb5",
+      "id": 3,
       "timestamp": 1748706926300,
       "items": [
         {
@@ -213,7 +213,7 @@
       "paymentMethod": "cash"
     },
     {
-      "id": "aiGIOmUVJgxA0lWraDE89",
+      "id": 4,
       "timestamp": 1748707939514,
       "items": [
         {
@@ -239,5 +239,6 @@
       "status": "completed",
       "paymentMethod": "cash"
     }
-  ]
+  ],
+  "lastOrderId": 4
 }

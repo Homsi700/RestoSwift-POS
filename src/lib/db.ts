@@ -1,3 +1,4 @@
+
 // src/lib/db.ts
 import { join, dirname } from 'path';
 import { LowSync } from 'lowdb';
@@ -11,7 +12,7 @@ export interface MenuItem {
   category: string;
   price: number;
   isAvailable: boolean;
-  imageUrl?: string; 
+  imageUrl?: string;
 }
 
 export interface OrderItem {
@@ -22,7 +23,7 @@ export interface OrderItem {
 }
 
 export interface Order {
-  id: string;
+  id: number; // Changed to number for sequential IDs
   timestamp: number; // Unix timestamp (Date.now())
   items: OrderItem[];
   totalAmount: number;
@@ -33,17 +34,12 @@ export interface Order {
 interface DBData {
   menuItems: MenuItem[];
   orders: Order[];
+  lastOrderId: number; // Added to track the last order ID
 }
 
 let db: LowSync<DBData>;
 
 try {
-  // This approach for __dirname is suitable for ES modules
-  // const __filename = fileURLToPath(import.meta.url);
-  // const __dirname = dirname(__filename);
-  
-  // For Next.js, process.cwd() usually points to the project root.
-  // We want db.json to be in the project root.
   const projectRoot = process.cwd();
   const dbPath = join(projectRoot, 'db.json');
 
@@ -51,15 +47,18 @@ try {
   db = new LowSync<DBData>(adapter, {
     menuItems: [],
     orders: [],
+    lastOrderId: 0, // Default initial value
   });
 
   db.read();
 
-  // Initialize with default data if the file is empty or doesn't have menuItems
-  if (!db.data || !db.data.menuItems || db.data.menuItems.length === 0) {
+  // Initialize with default data if the file is empty or doesn't have menuItems/lastOrderId
+  if (!db.data) {
+    db.data = { menuItems: [], orders: [], lastOrderId: 0 };
+  }
+  if (!db.data.menuItems || db.data.menuItems.length === 0) {
     console.log("Initializing db.json with default menu items...");
-    db.data = {
-      menuItems: [
+    db.data.menuItems = [
         { id: "item_1", name: "بيتزا مارغريتا", category: "بيتزا", price: 25000, isAvailable: true, imageUrl: "https://placehold.co/300x200.png?text=بيتزا+مارغريتا" },
         { id: "item_2", name: "برجر لحم", category: "سندويشات", price: 35000, isAvailable: true, imageUrl: "https://placehold.co/300x200.png?text=برجر+لحم" },
         { id: "item_3", name: "سلطة دجاج", category: "سلطات", price: 22000, isAvailable: true, imageUrl: "https://placehold.co/300x200.png?text=سلطة+دجاج" },
@@ -70,23 +69,28 @@ try {
         { id: "item_8", name: "شاورما دجاج", category: "سندويشات", price: 20000, isAvailable: true, imageUrl: "https://placehold.co/300x200.png?text=شاورما+دجاج" },
         { id: "item_9", name: "فتوش", category: "سلطات", price: 15000, isAvailable: true, imageUrl: "https://placehold.co/300x200.png?text=فتوش" },
         { id: "item_10", name: "ماء معدني", category: "مشروبات", price: 3000, isAvailable: true, imageUrl: "https://placehold.co/300x200.png?text=ماء" }
-      ],
-      orders: [],
-    };
-    db.write();
+      ];
   }
+  if (db.data.orders === undefined) {
+    db.data.orders = [];
+  }
+  if (db.data.lastOrderId === undefined) {
+    // If there are existing orders but no lastOrderId, try to infer it.
+    // This is a simple inference, might need adjustment for complex scenarios.
+    db.data.lastOrderId = db.data.orders.reduce((maxId, order) => Math.max(maxId, typeof order.id === 'number' ? order.id : 0), 0);
+  }
+  db.write();
+
 } catch (error) {
   console.error("Failed to initialize LowDB:", error);
-  // Fallback or error handling in case db initialization fails
-  // This ensures `db` is always defined, though it might not persist data if initialization failed.
-  // @ts-ignore
-  db = { 
+  db = {
     // @ts-ignore
-    data: { 
+    data: {
       menuItems: [
         { id: 'fallback_1', name: 'Fallback Item 1 (Error in DB init)', category: 'Fallback', price: 10000, isAvailable: true },
-      ], 
-      orders: [] 
+      ],
+      orders: [],
+      lastOrderId: 0,
     },
     read: () => {},
     write: () => { console.error("DB write operation failed due to initialization error.")},
