@@ -1,13 +1,13 @@
 
 'use client';
 
-import React, { useState, useEffect, useTransition } from 'react';
+import React, { useState, useTransition } from 'react';
 import { getDailySalesReport, getItemSalesCountReport } from '@/app/actions';
 import type { DailySalesReportData, ItemSalesReportItem } from '@/app/actions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption } from '@/components/ui/table';
-import { Loader2, BarChart3, FileText, AlertTriangle } from 'lucide-react';
+import { Loader2, BarChart3, FileText, AlertTriangle, CalendarDays } from 'lucide-react';
 
 export default function ReportsPage() {
   const [dailyReport, setDailyReport] = useState<DailySalesReportData | null>(null);
@@ -17,8 +17,9 @@ export default function ReportsPage() {
   const [dailyError, setDailyError] = useState<string | null>(null);
   const [itemsError, setItemsError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const handleFetchDailyReport = () => {
     setDailyError(null);
+    setDailyReport(null); // Clear previous report
     startDailyTransition(async () => {
       try {
         const report = await getDailySalesReport();
@@ -28,10 +29,11 @@ export default function ReportsPage() {
         setDailyError("فشل تحميل التقرير اليومي. يرجى المحاولة مرة أخرى.");
       }
     });
-  }, []);
+  };
 
   const handleFetchItemSalesReport = () => {
     setItemsError(null);
+    setItemSalesReport([]); // Clear previous report
     startItemsTransition(async () => {
       try {
         const report = await getItemSalesCountReport();
@@ -55,7 +57,7 @@ export default function ReportsPage() {
 
     try {
         const date = new Date(year, month - 1, day); // Month is 0-indexed in JS Date
-        return new Intl.DateTimeFormat('ar-EG', { // Using ar-EG for a common Arabic locale for date
+        return new Intl.DateTimeFormat('ar-EG', { 
         year: 'numeric',
         month: 'long',
         day: 'numeric',
@@ -71,12 +73,21 @@ export default function ReportsPage() {
 
       <section className="mb-10">
         <Card className="shadow-lg border-border">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xl font-semibold font-headline flex items-center">
-              <FileText className="ms-2 h-6 w-6 text-primary" />
-              ملخص المبيعات اليومي
-            </CardTitle>
-            {dailyReport?.date && <CardDescription className="text-sm text-muted-foreground">لتاريخ: {formatDateForDisplay(dailyReport.date)}</CardDescription>}
+          <CardHeader className="pb-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <CardTitle className="text-xl font-semibold font-headline flex items-center">
+                <CalendarDays className="ms-2 h-6 w-6 text-primary" />
+                ملخص المبيعات لليوم الحالي
+              </CardTitle>
+              <Button onClick={handleFetchDailyReport} disabled={isLoadingDaily} className="w-full sm:w-auto">
+                {isLoadingDaily && <Loader2 className="ms-2 h-4 w-4 animate-spin" />}
+                {isLoadingDaily ? 'جاري التحميل...' : 'عرض تقرير اليوم'}
+              </Button>
+            </div>
+            {dailyReport?.date && <CardDescription className="text-sm text-muted-foreground mt-2">التقرير لتاريخ: {formatDateForDisplay(dailyReport.date)}</CardDescription>}
+            <CardDescription className="text-xs text-muted-foreground mt-1">
+              ملاحظة: هذا التقرير يعرض إجمالي المبيعات لكامل اليوم الحالي حتى لحظة طلبه. لتتبع مبيعات كل موظف على حدة، سيتطلب الأمر نظام تسجيل دخول سيتم إضافته لاحقًا.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {isLoadingDaily ? (
@@ -101,7 +112,7 @@ export default function ReportsPage() {
                 </div>
               </div>
             ) : (
-              <p className="text-muted-foreground text-center py-5">لا توجد بيانات لعرضها للتقرير اليومي.</p>
+              <p className="text-muted-foreground text-center py-5">الرجاء الضغط على زر "عرض تقرير اليوم" لتحميل البيانات.</p>
             )}
           </CardContent>
         </Card>
@@ -156,7 +167,7 @@ export default function ReportsPage() {
                 </Table>
               </div>
             ) : (
-               !isLoadingItems && <p className="text-muted-foreground text-center py-10">لم يتم إنشاء تقرير الأصناف بعد أو لا توجد بيانات مبيعات للأصناف.</p>
+               !isLoadingItems && <p className="text-muted-foreground text-center py-10">الرجاء الضغط على زر "عرض تقرير الكميات" لتحميل البيانات، أو لا توجد بيانات مبيعات للأصناف.</p>
             )}
           </CardContent>
         </Card>
@@ -164,3 +175,4 @@ export default function ReportsPage() {
     </div>
   );
 }
+
