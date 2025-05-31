@@ -3,8 +3,6 @@
 'use server';
 
 import { db, type MenuItem, type OrderItem, type Order } from '@/lib/db';
-// nanoid is no longer needed for order IDs but might be for menu item IDs if not user-provided.
-// For now, addMenuItemAction generates nanoid for menu items.
 import { nanoid } from 'nanoid'; 
 
 // Action to get all menu items (available and unavailable for admin, only available for POS)
@@ -86,4 +84,73 @@ export async function completeOrderAndPrint(orderItems: OrderItem[]): Promise<Or
     console.error("Error saving order to DB:", e);
     return { error: "Failed to save order." };
   }
+}
+
+// Types for Reports
+export interface DailySalesReportData {
+  totalSales: number;
+  numberOfInvoices: number;
+  date: string; // YYYY-MM-DD
+}
+
+export interface ItemSalesReportItem {
+  itemName: string;
+  quantitySold: number;
+}
+
+// Action to get daily sales report
+export async function getDailySalesReport(): Promise<DailySalesReportData> {
+  db.read();
+  const orders = db.data.orders || [];
+
+  const today = new Date();
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+  // End of today is start of next day minus 1 millisecond
+  const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).getTime() -1;
+
+  const dailyOrders = orders.filter(order =>
+    order.timestamp >= todayStart && order.timestamp <= todayEnd
+  );
+
+  const totalSales = dailyOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+  const numberOfInvoices = dailyOrders.length;
+  
+  // Ensure date is formatted as YYYY-MM-DD
+  const year = today.getFullYear();
+  const month = (today.getMonth() + 1).toString().padStart(2, '0'); // Months are 0-indexed
+  const day = today.getDate().toString().padStart(2, '0');
+  const formattedDate = `${year}-${month}-${day}`;
+
+  return {
+    totalSales,
+    numberOfInvoices,
+    date: formattedDate,
+  };
+}
+
+// Action to get item sales count report (all-time for now)
+export async function getItemSalesCountReport(): Promise<ItemSalesReportItem[]> {
+  db.read();
+  const orders = db.data.orders || [];
+  const itemSalesMap: { [itemName: string]: number } = {};
+
+  orders.forEach(order => {
+    order.items.forEach(item => {
+      if (itemSalesMap[item.name]) {
+        itemSalesMap[item.name] += item.quantity;
+      } else {
+        itemSalesMap[item.name] = item.quantity;
+      }
+    });
+  });
+
+  const report = Object.entries(itemSalesMap).map(([itemName, quantitySold]) => ({
+    itemName,
+    quantitySold,
+  }));
+
+  // Sort by quantity sold descending for better readability
+  report.sort((a, b) => b.quantitySold - a.quantitySold);
+
+  return report;
 }

@@ -86,6 +86,13 @@
       "price": 80000,
       "category": "لحوم دجاج",
       "isAvailable": true
+    },
+    {
+      "id": "5wROILtTrZO8KLn4mxO-E",
+      "name": "بطاطا عادي",
+      "price": 8500,
+      "category": "سندويش",
+      "isAvailable": true
     }
   ],
   "orders": [
@@ -283,7 +290,40 @@
       "totalAmount": 211000,
       "status": "completed",
       "paymentMethod": "cash"
+    },
+    {
+      "id": 6,
+      "timestamp": 1748710907553,
+      "items": [
+        {
+          "menuItemId": "item_5",
+          "name": "كولا",
+          "price": 8000,
+          "quantity": 1
+        },
+        {
+          "menuItemId": "item_4",
+          "name": "عصير برتقال",
+          "price": 10000,
+          "quantity": 1
+        },
+        {
+          "menuItemId": "item_3",
+          "name": "سلطة دجاج",
+          "price": 22000,
+          "quantity": 1
+        },
+        {
+          "menuItemId": "item_2",
+          "name": "برجر لحم",
+          "price": 35000,
+          "quantity": 1
+        }
+      ],
+      "totalAmount": 75000,
+      "status": "completed",
+      "paymentMethod": "cash"
     }
   ],
-  "lastOrderId": 5
+  "lastOrderId": 6
 }
