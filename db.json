@@ -159,6 +159,51 @@
       "totalAmount": 188000,
       "status": "completed",
       "paymentMethod": "cash"
+    },
+    {
+      "id": "Z64HXic6OYJhOeiG9ztb5",
+      "timestamp": 1748706926300,
+      "items": [
+        {
+          "menuItemId": "item_7",
+          "name": "فروج مشوي",
+          "price": 75000,
+          "quantity": 1
+        },
+        {
+          "menuItemId": "item_8",
+          "name": "شاورما دجاج",
+          "price": 20000,
+          "quantity": 1
+        },
+        {
+          "menuItemId": "item_9",
+          "name": "فتوش",
+          "price": 15000,
+          "quantity": 2
+        },
+        {
+          "menuItemId": "item_10",
+          "name": "ماء معدني",
+          "price": 3000,
+          "quantity": 2
+        },
+        {
+          "menuItemId": "item_1",
+          "name": "بيتزا مارغريتا",
+          "price": 25000,
+          "quantity": 1
+        },
+        {
+          "menuItemId": "item_2",
+          "name": "برجر لحم",
+          "price": 35000,
+          "quantity": 2
+        }
+      ],
+      "totalAmount": 226000,
+      "status": "completed",
+      "paymentMethod": "cash"
     }
   ]
 }
