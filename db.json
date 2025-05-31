@@ -85,12 +85,40 @@
       "name": "بروستد",
       "price": 80000,
       "category": "لحوم دجاج",
-      "isAvailable": true
+      "isAvailable": false
     },
     {
       "id": "5wROILtTrZO8KLn4mxO-E",
       "name": "بطاطا عادي",
       "price": 8500,
+      "category": "سندويش",
+      "isAvailable": true
+    },
+    {
+      "id": "imf38oIw9hLsrUjyWk55X",
+      "name": "بطاطا دبل",
+      "price": 14000,
+      "category": "سندويش",
+      "isAvailable": true
+    },
+    {
+      "id": "8cU6mxBvx2uto-EP7IXzu",
+      "name": "شاورما دبل",
+      "price": 15000,
+      "category": "سندويش",
+      "isAvailable": true
+    },
+    {
+      "id": "IJ7MtsEAN8QT5tRE8i65U",
+      "name": "فاهيتا وجبة",
+      "price": 30000,
+      "category": "وجبات",
+      "isAvailable": true
+    },
+    {
+      "id": "XsRMkYDn-uyyztD5yym-_",
+      "name": "فاهيتا صمون",
+      "price": 25000,
       "category": "سندويش",
       "isAvailable": true
     }
@@ -323,7 +351,67 @@
       "totalAmount": 75000,
       "status": "completed",
       "paymentMethod": "cash"
+    },
+    {
+      "id": 7,
+      "timestamp": 1748711169088,
+      "items": [
+        {
+          "menuItemId": "XsRMkYDn-uyyztD5yym-_",
+          "name": "فاهيتا صمون",
+          "price": 25000,
+          "quantity": 1
+        }
+      ],
+      "totalAmount": 25000,
+      "status": "completed",
+      "paymentMethod": "cash"
+    },
+    {
+      "id": 8,
+      "timestamp": 1748711216230,
+      "items": [
+        {
+          "menuItemId": "item_8",
+          "name": "شاورما دجاج",
+          "price": 20000,
+          "quantity": 1
+        },
+        {
+          "menuItemId": "8cU6mxBvx2uto-EP7IXzu",
+          "name": "شاورما دبل",
+          "price": 15000,
+          "quantity": 1
+        },
+        {
+          "menuItemId": "imf38oIw9hLsrUjyWk55X",
+          "name": "بطاطا دبل",
+          "price": 14000,
+          "quantity": 1
+        },
+        {
+          "menuItemId": "5wROILtTrZO8KLn4mxO-E",
+          "name": "بطاطا عادي",
+          "price": 8500,
+          "quantity": 1
+        },
+        {
+          "menuItemId": "item_2",
+          "name": "برجر لحم",
+          "price": 35000,
+          "quantity": 1
+        },
+        {
+          "menuItemId": "item_3",
+          "name": "سلطة دجاج",
+          "price": 22000,
+          "quantity": 1
+        }
+      ],
+      "totalAmount": 114500,
+      "status": "completed",
+      "paymentMethod": "cash"
     }
   ],
-  "lastOrderId": 6
+  "lastOrderId": 8
 }

@@ -8,13 +8,26 @@ import EditItemForm from '@/components/EditItemForm';
 import MenuItemCard from '@/components/MenuItemCard';
 import type { MenuItem } from '@/types';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2 } from 'lucide-react'; // For loading indicator
-import { Button } from '@/components/ui/button'; // For refresh button potentially
+import { Loader2, Trash2 } from 'lucide-react'; 
+import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function AdminMenuPage() {
-  const { menuItems, addMenuItem, toggleItemAvailability, updateMenuItem, isLoading, isMutating } = useMenu();
+  const { menuItems, addMenuItem, toggleItemAvailability, updateMenuItem, deleteMenuItem, isLoading, isMutating } = useMenu();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deletingItemId, setDeletingItemId] = useState<string | null>(null);
+
 
   const handleOpenEditDialog = (item: MenuItem) => {
     setEditingItem(item);
@@ -22,18 +35,29 @@ export default function AdminMenuPage() {
   };
 
   const handleSaveEdit = async (updatedItem: MenuItem) => {
-    // isMutating will be true from context while updateMenuItem is running
     await updateMenuItem(updatedItem); 
     setIsEditDialogOpen(false);
     setEditingItem(null);
   };
 
   const handleAddItem = async (itemData: Omit<MenuItem, 'id' | 'isAvailable' | 'imageUrl'>) => {
-    // isMutating will be true from context while addMenuItem is running
     await addMenuItem(itemData);
   };
 
-  if (isLoading && menuItems.length === 0) { // Show full page loader only on initial load and if no items yet
+  const handleOpenDeleteDialog = (id: string) => {
+    setDeletingItemId(id);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (deletingItemId) {
+      await deleteMenuItem(deletingItemId);
+    }
+    setIsDeleteDialogOpen(false);
+    setDeletingItemId(null);
+  };
+
+  if (isLoading && menuItems.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-[calc(100vh-200px)]">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -45,7 +69,6 @@ export default function AdminMenuPage() {
   return (
     <div className="flex flex-col gap-6 h-full">
       <div>
-        {/* Pass the new handleAddItem which calls context's addMenuItem */}
         <AddItemForm onAddItem={handleAddItem} /> 
       </div>
 
@@ -62,15 +85,16 @@ export default function AdminMenuPage() {
                 <MenuItemCard
                   key={item.id}
                   item={item}
-                  onToggleAvailability={toggleItemAvailability} // Directly use from context
+                  onToggleAvailability={toggleItemAvailability}
                   onEdit={handleOpenEditDialog}
+                  onDelete={handleOpenDeleteDialog} // Pass delete handler
                   showAdminControls={true}
                 />
               ))}
             </div>
           </ScrollArea>
         ) : (
-          !isLoading && ( // Only show "no items" if not loading
+          !isLoading && (
             <p className="text-muted-foreground text-center py-10">
               لا توجد عناصر في القائمة بعد. أضف البعض باستخدام النموذج أعلاه.
             </p>
@@ -85,6 +109,23 @@ export default function AdminMenuPage() {
           onSave={handleSaveEdit}
         />
       )}
+       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>هل أنت متأكد من الحذف؟</AlertDialogTitle>
+            <AlertDialogDescription>
+              لا يمكن التراجع عن هذا الإجراء. سيتم حذف هذا العنصر نهائياً من قائمة الطعام.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">
+                <Trash2 className="ms-2 h-4 w-4" />
+                حذف
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

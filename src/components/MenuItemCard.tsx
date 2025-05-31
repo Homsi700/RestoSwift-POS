@@ -4,15 +4,15 @@
 import type { MenuItem } from '@/lib/db'; // Use type from db.ts
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye, EyeOff, Pencil } from 'lucide-react'; // PlusCircle removed as it's no longer used
+import { Eye, EyeOff, Pencil, Trash2 } from 'lucide-react'; // Added Trash2
 import { cn } from '@/lib/utils';
 
 interface MenuItemCardProps {
   item: MenuItem;
   onClick?: (item: MenuItem) => void; // For POS page: add to cart
-  // Props for Admin page (from existing implementation)
   onToggleAvailability?: (id: string) => void;
   onEdit?: (item: MenuItem) => void;
+  onDelete?: (id: string) => void; // New prop for delete
   showAdminControls?: boolean;
 }
 
@@ -21,6 +21,7 @@ export default function MenuItemCard({
   onClick,
   onToggleAvailability,
   onEdit,
+  onDelete, // New prop
   showAdminControls = false
 }: MenuItemCardProps) {
 
@@ -42,7 +43,12 @@ export default function MenuItemCard({
     }
   };
 
-  // Determine if the card is for POS (onClick is present) or Admin (showAdminControls is true)
+  const handleDeleteAdmin = () => {
+    if (onDelete) {
+      onDelete(item.id);
+    }
+  };
+
   const isPOSCard = !!onClick;
 
   return (
@@ -50,9 +56,9 @@ export default function MenuItemCard({
       className={cn(
         "flex flex-col overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-200",
         !item.isAvailable ? "opacity-60 bg-muted/50" : "bg-card",
-        isPOSCard && item.isAvailable ? "cursor-pointer select-none" : "", // Added select-none
+        isPOSCard && item.isAvailable ? "cursor-pointer select-none" : "",
         isPOSCard && !item.isAvailable ? "cursor-not-allowed" : "",
-        "min-w-[130px] max-w-[180px]" // Adjusted size for POS
+        "min-w-[130px] max-w-[180px]"
       )}
       onClick={isPOSCard ? handleCardClick : undefined}
       role={isPOSCard ? "button" : undefined}
@@ -73,29 +79,31 @@ export default function MenuItemCard({
         )}
       </CardContent>
       
-      {showAdminControls && ( // Admin controls section
+      {showAdminControls && (
         <CardFooter className="p-2 flex flex-col gap-2">
             <div className="flex items-center justify-around space-x-1 rtl:space-x-reverse w-full mb-1">
-              <div className="flex items-center space-x-1 rtl:space-x-reverse">
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleToggleAdmin}
-                    aria-label={item.isAvailable ? "تحديد كغير متوفر" : "تحديد كمتوفر"}
-                    className="h-7 w-7"
-                >
-                    {item.isAvailable ? <Eye size={14} /> : <EyeOff size={14} />}
-                </Button>
-              </div>
+              <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleToggleAdmin}
+                  aria-label={item.isAvailable ? "تحديد كغير متوفر" : "تحديد كمتوفر"}
+                  className="h-7 w-7"
+              >
+                  {item.isAvailable ? <Eye size={14} /> : <EyeOff size={14} />}
+              </Button>
               {onEdit && (
                 <Button variant="outline" size="icon" onClick={handleEditAdmin} aria-label={`تعديل ${item.name}`} className="h-7 w-7">
                   <Pencil size={14} />
                 </Button>
               )}
+              {onDelete && (
+                 <Button variant="destructive" size="icon" onClick={handleDeleteAdmin} aria-label={`حذف ${item.name}`} className="h-7 w-7">
+                  <Trash2 size={14} />
+                </Button>
+              )}
             </div>
         </CardFooter>
       )}
-      {/* Redundant "Add" button for POS card has been removed as per user feedback, the whole card is clickable */}
     </Card>
   );
 }

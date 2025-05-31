@@ -8,7 +8,8 @@ import {
   getMenuItems as getMenuItemsAction, 
   addMenuItemAction, 
   toggleMenuItemAvailabilityAction, 
-  updateMenuItemAction 
+  updateMenuItemAction,
+  deleteMenuItemAction 
 } from '@/app/actions';
 
 interface MenuContextType {
@@ -16,6 +17,7 @@ interface MenuContextType {
   addMenuItem: (itemData: Omit<MenuItem, 'id' | 'isAvailable' | 'imageUrl'>) => Promise<void>;
   toggleItemAvailability: (id: string) => Promise<void>;
   updateMenuItem: (updatedItem: MenuItem) => Promise<void>;
+  deleteMenuItem: (id: string) => Promise<void>;
   getAvailableItems: () => MenuItem[];
   isLoading: boolean;
   isMutating: boolean;
@@ -26,7 +28,7 @@ const MenuContext = createContext<MenuContextType | undefined>(undefined);
 export const MenuProvider = ({ children }: { children: ReactNode }) => {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [isLoading, startLoadingTransition] = useTransition(); // For initial loading
-  const [isMutating, startMutationTransition] = useTransition(); // For add, update, toggle
+  const [isMutating, startMutationTransition] = useTransition(); // For add, update, toggle, delete
   const { toast } = useToast();
 
   const fetchAllMenuItems = useCallback(() => {
@@ -100,6 +102,23 @@ export const MenuProvider = ({ children }: { children: ReactNode }) => {
       }
     });
   }, [toast]);
+
+  const deleteMenuItem = useCallback(async (id: string) => {
+    startMutationTransition(async () => {
+      try {
+        const result = await deleteMenuItemAction(id);
+        if (result.success) {
+          setMenuItems((prevItems) => prevItems.filter((item) => item.id !== id));
+          toast({ title: "نجاح", description: "تم حذف العنصر بنجاح." });
+        } else {
+          throw new Error(result.message || "Failed to delete item");
+        }
+      } catch (error: any) {
+        console.error("Failed to delete menu item:", error);
+        toast({ title: "خطأ", description: error.message || "فشل حذف العنصر.", variant: "destructive" });
+      }
+    });
+  }, [toast]);
   
   const getAvailableItems = useCallback(() => {
     // This function is mainly for the POS page, admin page uses all items.
@@ -112,6 +131,7 @@ export const MenuProvider = ({ children }: { children: ReactNode }) => {
       addMenuItem, 
       toggleItemAvailability, 
       updateMenuItem, 
+      deleteMenuItem,
       getAvailableItems,
       isLoading: isLoading, // For initial fetch
       isMutating: isMutating // For CUD operations

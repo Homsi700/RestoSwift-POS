@@ -53,6 +53,18 @@ export async function toggleMenuItemAvailabilityAction(id: string): Promise<Menu
   return null;
 }
 
+// Action to delete a menu item
+export async function deleteMenuItemAction(id: string): Promise<{ success: boolean; message?: string }> {
+  db.read();
+  const initialLength = db.data.menuItems.length;
+  db.data.menuItems = db.data.menuItems.filter(item => item.id !== id);
+  if (db.data.menuItems.length < initialLength) {
+    db.write();
+    return { success: true };
+  }
+  return { success: false, message: "لم يتم العثور على العنصر." };
+}
+
 // Action to complete an order and save it to the database
 export async function completeOrderAndPrint(orderItems: OrderItem[]): Promise<Order | { error: string }> {
   if (!orderItems || orderItems.length === 0) {
