@@ -127,7 +127,6 @@ export async function getDailySalesReport(): Promise<DailySalesReportData> {
   const totalSales = dailyOrders.reduce((sum, order) => sum + order.totalAmount, 0);
   const numberOfInvoices = dailyOrders.length;
   
-  // Ensure date is formatted as YYYY-MM-DD
   const year = today.getFullYear();
   const month = (today.getMonth() + 1).toString().padStart(2, '0'); // Months are 0-indexed
   const day = today.getDate().toString().padStart(2, '0');
@@ -140,13 +139,25 @@ export async function getDailySalesReport(): Promise<DailySalesReportData> {
   };
 }
 
-// Action to get item sales count report (all-time for now)
-export async function getItemSalesCountReport(): Promise<ItemSalesReportItem[]> {
+// Action to get item sales count report
+export async function getItemSalesCountReport(startDate?: number, endDate?: number): Promise<ItemSalesReportItem[]> {
   db.read();
-  const orders = db.data.orders || [];
+  let ordersToProcess = db.data.orders || [];
+
+  if (startDate && endDate) {
+    ordersToProcess = ordersToProcess.filter(order => 
+      order.timestamp >= startDate && order.timestamp <= endDate
+    );
+  } else if (startDate) { // If only start date is provided
+    ordersToProcess = ordersToProcess.filter(order => order.timestamp >= startDate);
+  } else if (endDate) { // If only end date is provided
+    ordersToProcess = ordersToProcess.filter(order => order.timestamp <= endDate);
+  }
+  // If neither is provided, all orders are processed (initial behavior)
+
   const itemSalesMap: { [itemName: string]: number } = {};
 
-  orders.forEach(order => {
+  ordersToProcess.forEach(order => {
     order.items.forEach(item => {
       if (itemSalesMap[item.name]) {
         itemSalesMap[item.name] += item.quantity;
@@ -161,7 +172,6 @@ export async function getItemSalesCountReport(): Promise<ItemSalesReportItem[]> 
     quantitySold,
   }));
 
-  // Sort by quantity sold descending for better readability
   report.sort((a, b) => b.quantitySold - a.quantitySold);
 
   return report;

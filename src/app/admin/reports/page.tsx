@@ -7,7 +7,10 @@ import type { DailySalesReportData, ItemSalesReportItem } from '@/app/actions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableCaption } from '@/components/ui/table';
-import { Loader2, BarChart3, FileText, AlertTriangle, CalendarDays } from 'lucide-react';
+import { DatePicker } from '@/components/ui/date-picker'; // Import DatePicker
+import { Loader2, BarChart3, AlertTriangle, CalendarDays } from 'lucide-react';
+import { format } from "date-fns"
+import { arEG } from "date-fns/locale"
 
 export default function ReportsPage() {
   const [dailyReport, setDailyReport] = useState<DailySalesReportData | null>(null);
@@ -17,9 +20,14 @@ export default function ReportsPage() {
   const [dailyError, setDailyError] = useState<string | null>(null);
   const [itemsError, setItemsError] = useState<string | null>(null);
 
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [itemReportDateRange, setItemReportDateRange] = useState<string | null>(null);
+
+
   const handleFetchDailyReport = () => {
     setDailyError(null);
-    setDailyReport(null); // Clear previous report
+    setDailyReport(null); 
     startDailyTransition(async () => {
       try {
         const report = await getDailySalesReport();
@@ -33,11 +41,44 @@ export default function ReportsPage() {
 
   const handleFetchItemSalesReport = () => {
     setItemsError(null);
-    setItemSalesReport([]); // Clear previous report
+    setItemSalesReport([]); 
+    setItemReportDateRange(null);
+
+    let startTimestamp: number | undefined = undefined;
+    let endTimestamp: number | undefined = undefined;
+    let rangeString = "لكل الأوقات";
+
+    if (startDate) {
+      startTimestamp = new Date(startDate.setHours(0, 0, 0, 0)).getTime();
+      rangeString = `من ${format(startDate, "PPP", { locale: arEG })}`;
+    }
+    if (endDate) {
+      endTimestamp = new Date(endDate.setHours(23, 59, 59, 999)).getTime();
+      if (startDate) {
+        rangeString += ` إلى ${format(endDate, "PPP", { locale: arEG })}`;
+      } else {
+        rangeString = `حتى ${format(endDate, "PPP", { locale: arEG })}`;
+      }
+    }
+    
+    // Ensure if one date is set, the other is also considered (or make it more flexible)
+    // For now, if only one is set, it might not work as intended by action, or might need action adjustment
+    // Let's enforce both or none for now for simplicity with current action logic
+    if ((startDate && !endDate) || (!startDate && endDate)) {
+        setItemsError("يرجى تحديد تاريخ البدء والانتهاء معًا، أو ترك كليهما فارغين لتقرير شامل.");
+        return;
+    }
+
+
     startItemsTransition(async () => {
       try {
-        const report = await getItemSalesCountReport();
+        const report = await getItemSalesCountReport(startTimestamp, endTimestamp);
         setItemSalesReport(report);
+        if (startTimestamp || endTimestamp) {
+          setItemReportDateRange(rangeString);
+        } else {
+          setItemReportDateRange("لكل الأوقات (بدون تحديد تاريخ)");
+        }
       } catch (error) {
         console.error("Failed to fetch item sales report:", error);
         setItemsError("فشل تحميل تقرير مبيعات الأصناف. يرجى المحاولة مرة أخرى.");
@@ -51,12 +92,11 @@ export default function ReportsPage() {
 
   const formatDateForDisplay = (dateString: string | undefined) => {
     if (!dateString) return 'غير محدد';
-    // Assuming dateString is YYYY-MM-DD
     const [year, month, day] = dateString.split('-').map(Number);
     if (!year || !month || !day) return 'تاريخ غير صالح';
 
     try {
-        const date = new Date(year, month - 1, day); // Month is 0-indexed in JS Date
+        const date = new Date(year, month - 1, day);
         return new Intl.DateTimeFormat('ar-EG', { 
         year: 'numeric',
         month: 'long',
@@ -86,7 +126,7 @@ export default function ReportsPage() {
             </div>
             {dailyReport?.date && <CardDescription className="text-sm text-muted-foreground mt-2">التقرير لتاريخ: {formatDateForDisplay(dailyReport.date)}</CardDescription>}
             <CardDescription className="text-xs text-muted-foreground mt-1">
-              ملاحظة: هذا التقرير يعرض إجمالي المبيعات لكامل اليوم الحالي حتى لحظة طلبه. لتتبع مبيعات كل موظف على حدة، سيتطلب الأمر نظام تسجيل دخول سيتم إضافته لاحقًا.
+              ملاحظة: هذا التقرير يعرض إجمالي المبيعات لكامل اليوم الحالي حتى لحظة طلبه.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -126,14 +166,25 @@ export default function ReportsPage() {
                   <BarChart3 className="ms-2 h-6 w-6 text-primary" />
                   تقرير كميات الأصناف المباعة
                 </CardTitle>
-                <Button onClick={handleFetchItemSalesReport} disabled={isLoadingItems} className="w-full sm:w-auto">
-                  {isLoadingItems && <Loader2 className="ms-2 h-4 w-4 animate-spin" />}
-                  {isLoadingItems ? 'جاري التحميل...' : 'عرض تقرير الكميات (الكل)'}
-                </Button>
             </div>
-             <CardDescription className="mt-2 text-sm text-muted-foreground">
-              يعرض هذا التقرير إجمالي الكميات المباعة لكل صنف منذ بداية تسجيل الطلبات.
-            </CardDescription>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4 items-end">
+              <div className="space-y-1">
+                <label htmlFor="startDate" className="text-sm font-medium text-muted-foreground">من تاريخ</label>
+                <DatePicker date={startDate} setDate={setStartDate} placeholder="تاريخ البدء" />
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="endDate" className="text-sm font-medium text-muted-foreground">إلى تاريخ</label>
+                <DatePicker date={endDate} setDate={setEndDate} placeholder="تاريخ الانتهاء" />
+              </div>
+              <Button onClick={handleFetchItemSalesReport} disabled={isLoadingItems} className="w-full sm:w-auto self-end">
+                {isLoadingItems && <Loader2 className="ms-2 h-4 w-4 animate-spin" />}
+                {isLoadingItems ? 'جاري التحميل...' : 'عرض تقرير الكميات'}
+              </Button>
+            </div>
+             {itemReportDateRange && <CardDescription className="mt-3 text-sm text-muted-foreground">التقرير لـ: {itemReportDateRange}</CardDescription>}
+             <CardDescription className="mt-1 text-xs text-muted-foreground">
+                اترك حقول التاريخ فارغة لعرض تقرير شامل لكل الأوقات.
+             </CardDescription>
           </CardHeader>
           <CardContent>
             {isLoadingItems ? (
@@ -149,7 +200,7 @@ export default function ReportsPage() {
             ) : itemSalesReport.length > 0 ? (
               <div className="overflow-x-auto">
                 <Table>
-                  <TableCaption>قائمة الأصناف وإجمالي الكميات المباعة.</TableCaption>
+                  <TableCaption>قائمة الأصناف وإجمالي الكميات المباعة {itemReportDateRange ? `(${itemReportDateRange})` : '(لكل الأوقات)'}.</TableCaption>
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-[70%] min-w-[200px]">اسم الصنف</TableHead>
@@ -167,12 +218,14 @@ export default function ReportsPage() {
                 </Table>
               </div>
             ) : (
-               !isLoadingItems && <p className="text-muted-foreground text-center py-10">الرجاء الضغط على زر "عرض تقرير الكميات" لتحميل البيانات، أو لا توجد بيانات مبيعات للأصناف.</p>
+               !isLoadingItems && itemReportDateRange && <p className="text-muted-foreground text-center py-10">لا توجد بيانات مبيعات للأصناف خلال الفترة المحددة.</p>
             )}
+             { !isLoadingItems && !itemsError && itemSalesReport.length === 0 && !itemReportDateRange && (
+                 <p className="text-muted-foreground text-center py-10">الرجاء الضغط على زر "عرض تقرير الكميات" لتحميل البيانات.</p>
+             )}
           </CardContent>
         </Card>
       </section>
     </div>
   );
 }
-
