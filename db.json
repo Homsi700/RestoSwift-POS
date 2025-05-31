@@ -238,7 +238,52 @@
       "totalAmount": 170000,
       "status": "completed",
       "paymentMethod": "cash"
+    },
+    {
+      "id": 5,
+      "timestamp": 1748708280613,
+      "items": [
+        {
+          "menuItemId": "item_7",
+          "name": "فروج مشوي",
+          "price": 75000,
+          "quantity": 1
+        },
+        {
+          "menuItemId": "item_9",
+          "name": "فتوش",
+          "price": 15000,
+          "quantity": 1
+        },
+        {
+          "menuItemId": "item_10",
+          "name": "ماء معدني",
+          "price": 3000,
+          "quantity": 1
+        },
+        {
+          "menuItemId": "_LQZk-aoBaS8-RMXyqTL_",
+          "name": "بروستد",
+          "price": 80000,
+          "quantity": 1
+        },
+        {
+          "menuItemId": "item_5",
+          "name": "كولا",
+          "price": 8000,
+          "quantity": 2
+        },
+        {
+          "menuItemId": "item_3",
+          "name": "سلطة دجاج",
+          "price": 22000,
+          "quantity": 1
+        }
+      ],
+      "totalAmount": 211000,
+      "status": "completed",
+      "paymentMethod": "cash"
     }
   ],
-  "lastOrderId": 4
+  "lastOrderId": 5
 }

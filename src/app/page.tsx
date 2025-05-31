@@ -82,41 +82,115 @@ export default function POSPage() {
       printWindow.document.write('<style>');
       printWindow.document.write(`
         @media print {
-          @page { margin: 5mm; size: 80mm auto; } 
+          @page { 
+            margin: 5mm; 
+            size: 80mm auto; /* Common thermal printer width */
+          } 
         }
         body { 
-          font-family: 'Arial', sans-serif; 
+          font-family: 'Courier New', Courier, monospace; /* Monospaced font for alignment */
           font-size: 10pt; 
           margin: 0;
           padding: 5mm;
           direction: rtl;
           text-align: right;
+          color: #000; /* Ensure text is black */
         }
-        .receipt-header { text-align: center; margin-bottom: 10px; }
-        .receipt-header h1 { font-size: 14pt; margin: 0; }
-        .receipt-header p { font-size: 8pt; margin: 2px 0; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 3px 1px; font-size: 9pt; }
-        th { border-bottom: 1px dashed #000; }
-        .item-name { width: 50%; }
-        .item-qty, .item-price { width: 15%; text-align: center; }
-        .item-total { width: 20%; text-align: left; }
-        .totals-section { margin-top: 10px; border-top: 1px solid #000; padding-top: 5px; }
-        .totals-section div { display: flex; justify-content: space-between; font-size: 10pt; margin-bottom: 3px; }
-        .totals-section div span:first-child { font-weight: normal; }
-        .totals-section div span:last-child { font-weight: bold; text-align: left;}
-        .footer-message { text-align: center; margin-top: 15px; font-size: 8pt; }
-        hr { border: none; border-top: 1px dashed #000; margin: 5px 0; }
+        .receipt-header { 
+          text-align: center; 
+          margin-bottom: 10px; 
+        }
+        .receipt-header h1 { 
+          font-size: 16pt; /* Larger restaurant name */
+          font-weight: bold;
+          margin: 0 0 5px 0; 
+        }
+        .receipt-header p { 
+          font-size: 8pt; 
+          margin: 2px 0; 
+        }
+        .order-details p {
+          font-size: 9pt;
+          margin: 3px 0;
+        }
+        table { 
+          width: 100%; 
+          border-collapse: collapse; 
+          margin-top: 10px; 
+        }
+        th, td { 
+          padding: 4px 2px; /* Increased padding */
+          font-size: 9pt; 
+          text-align: right; /* Align text to right for Arabic */
+        }
+        th { 
+          border-bottom: 1px solid #000; /* Solid line for header separation */
+          font-weight: bold;
+        }
+        td {
+          border-bottom: 1px dashed #ccc; /* Dashed line for items */
+        }
+        tr.no-border td {
+          border-bottom: none;
+        }
+        .item-name { width: 45%; } /* Adjusted column widths */
+        .item-qty { width: 15%; text-align: center; }
+        .item-price { width: 20%; text-align: left; } /* Price aligned left */
+        .item-total { width: 20%; text-align: left; } /* Total aligned left */
+        
+        .totals-section { 
+          margin-top: 15px; 
+          border-top: 2px solid #000; /* Double solid line before totals */
+          padding-top: 8px; 
+        }
+        .totals-section div { 
+          display: flex; 
+          justify-content: space-between; 
+          font-size: 10pt; 
+          margin-bottom: 4px; 
+        }
+        .totals-section div span:first-child { 
+          font-weight: normal; 
+          text-align: right;
+        }
+        .totals-section div span:last-child { 
+          font-weight: bold; 
+          text-align: left;
+        }
+        .footer-message { 
+          text-align: center; 
+          margin-top: 20px; 
+          font-size: 9pt; 
+        }
+        hr.separator { 
+          border: none; 
+          border-top: 1px dashed #555; 
+          margin: 8px 0; 
+        }
       `);
       printWindow.document.write('</style></head><body>');
+      
       printWindow.document.write('<div class="receipt-header">');
       printWindow.document.write('<h1>ريستو سويفت</h1>'); 
+      // Add more details like address or phone if needed
+      // printWindow.document.write('<p>شارع الحمرا، دمشق</p>');
+      // printWindow.document.write('<p>هاتف: 011-1234567</p>');
       printWindow.document.write('</div>');
-      printWindow.document.write(`<p>رقم الفاتورة: ${order.id}</p>`); // Display numeric ID
-      printWindow.document.write(`<p>التاريخ: ${new Date(order.timestamp).toLocaleString('ar-SY', {dateStyle: 'short', timeStyle: 'short'})}</p>`);
+
+      printWindow.document.write('<hr class="separator">');
+      
+      printWindow.document.write('<div class="order-details">');
+      printWindow.document.write(`<p>رقم الفاتورة: ${order.id}</p>`);
+      printWindow.document.write(`<p>التاريخ: ${new Date(order.timestamp).toLocaleDateString('ar-SY', { year: 'numeric', month: 'short', day: 'numeric' })}</p>`);
+      printWindow.document.write(`<p>الوقت: ${new Date(order.timestamp).toLocaleTimeString('ar-SY', { hour: '2-digit', minute: '2-digit' })}</p>`);
+      printWindow.document.write('</div>');
+
+      printWindow.document.write('<hr class="separator">');
+      
       printWindow.document.write('<table><thead><tr>');
-      printWindow.document.write('<th class="item-name">الصنف</th><th class="item-qty">كمية</th><th class="item-price">سعر</th><th class="item-total">إجمالي</th>');
+      printWindow.document.write('<th class="item-name">الصنف</th><th class="item-qty">الكمية</th><th class="item-price">السعر</th><th class="item-total">الإجمالي</th>');
       printWindow.document.write('</tr></thead><tbody>');
+      
       order.items.forEach(item => {
         printWindow.document.write('<tr>');
         printWindow.document.write(`<td class="item-name">${item.name}</td>`);
@@ -125,18 +199,31 @@ export default function POSPage() {
         printWindow.document.write(`<td class="item-total">${(item.price * item.quantity).toLocaleString('ar-SY')}</td>`);
         printWindow.document.write('</tr>');
       });
+      
       printWindow.document.write('</tbody></table>');
-      printWindow.document.write('<hr>');
+      
       printWindow.document.write('<div class="totals-section">');
-      printWindow.document.write(`<div><span>الإجمالي الفرعي:</span> <span>${order.totalAmount.toLocaleString('ar-SY')} ل.س</span></div>`);
-      printWindow.document.write(`<div><span>الإجمالي الكلي:</span> <span>${order.totalAmount.toLocaleString('ar-SY')} ل.س</span></div>`);
+      // You can add subtotal, tax, discount here if needed in the future
+      // printWindow.document.write(`<div><span>المجموع الفرعي:</span> <span>${order.totalAmount.toLocaleString('ar-SY')} ل.س</span></div>`);
+      printWindow.document.write(`<div><span>الإجمالي للدفع:</span> <span>${order.totalAmount.toLocaleString('ar-SY')} ل.س</span></div>`);
       printWindow.document.write('</div>');
-      printWindow.document.write('<hr>');
+
+      printWindow.document.write('<hr class="separator" style="margin-top: 15px;">');
+      
       printWindow.document.write('<p class="footer-message">شكراً لزيارتكم!</p>');
+      printWindow.document.write('<p class="footer-message">نتمنى لكم يوماً سعيداً</p>');
+      
       printWindow.document.write('</body></html>');
       printWindow.document.close();
       printWindow.focus();
-      printWindow.print();
+      
+      // Delay print slightly to ensure content is fully rendered in the new window
+      setTimeout(() => {
+        printWindow.print();
+        // Optionally close the window after printing, but some users might want to keep it open
+        // printWindow.close(); 
+      }, 250); 
+
     } else {
       toast({ title: "خطأ في الطباعة", description: "لم يتمكن المتصفح من فتح نافذة الطباعة.", variant: "destructive" });
     }
@@ -152,7 +239,6 @@ export default function POSPage() {
       return;
     }
 
-    // Removed confirmation dialog
     startCompletingOrderTransition(async () => {
       const result = await completeOrderAndPrint(currentOrderItems);
       if ('error' in result) {
@@ -235,7 +321,7 @@ export default function POSPage() {
                             if (!isNaN(newQuantity) && newQuantity >= 0) {
                                 handleUpdateQuantity(item.menuItemId, newQuantity - item.quantity);
                             } else if (e.target.value === '') {
-                                handleUpdateQuantity(item.menuItemId, -item.quantity);
+                                handleUpdateQuantity(item.menuItemId, -item.quantity); // Treat empty as zero
                             }
                         }}
                         className="w-10 h-7 text-center px-1 text-sm"
@@ -278,3 +364,5 @@ export default function POSPage() {
     </div>
   );
 }
+
+    
