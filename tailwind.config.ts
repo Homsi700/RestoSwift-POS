@@ -1,17 +1,24 @@
 import type {Config} from 'tailwindcss';
 
 export default {
-  darkMode: ['class'],
+  darkMode: ['class'], // Keep class strategy for potential future use, though default is dark
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
+    container: {
+      center: true,
+      padding: "2rem",
+      screens: {
+        "2xl": "1400px",
+      },
+    },
     extend: {
       fontFamily: {
-        body: ['Inter', 'sans-serif'],
-        headline: ['Inter', 'sans-serif'],
+        body: ['PT Sans', 'sans-serif'],
+        headline: ['Playfair Display', 'serif'],
         code: ['monospace'],
       },
       colors: {
