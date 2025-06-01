@@ -29,12 +29,35 @@ export interface Order {
   totalAmount: number;
   status: 'pending' | 'completed' | 'cancelled';
   paymentMethod?: 'cash' | 'card' | 'online' | 'other';
+  userId?: string; // Optional: to link order to a user if login system is implemented
+}
+
+export interface User {
+  id: string;
+  username: string;
+  passwordHash: string; // Store hashed passwords
+  role: 'admin' | 'cashier';
+}
+
+export interface AppSettings {
+  restaurantName: string;
+}
+
+export interface Expense {
+  id: string;
+  description: string;
+  amount: number;
+  date: number; // Timestamp
+  category?: string;
 }
 
 interface DBData {
   menuItems: MenuItem[];
   orders: Order[];
-  lastOrderId: number; // Added to track the last order ID
+  lastOrderId: number;
+  users: User[];
+  appSettings: AppSettings;
+  expenses: Expense[];
 }
 
 let db: LowSync<DBData>;
@@ -47,51 +70,56 @@ try {
   db = new LowSync<DBData>(adapter, {
     menuItems: [],
     orders: [],
-    lastOrderId: 0, // Default initial value
+    lastOrderId: 0,
+    users: [],
+    appSettings: { restaurantName: "RestoSwift POS" },
+    expenses: [],
   });
 
   db.read();
 
-  // Initialize with default data if the file is empty or doesn't have menuItems/lastOrderId
   if (!db.data) {
-    db.data = { menuItems: [], orders: [], lastOrderId: 0 };
+    db.data = { 
+        menuItems: [], 
+        orders: [], 
+        lastOrderId: 0, 
+        users: [], 
+        appSettings: { restaurantName: "RestoSwift POS Default" },
+        expenses: []
+    };
   }
-  if (!db.data.menuItems || db.data.menuItems.length === 0) {
-    console.log("Initializing db.json with default menu items...");
-    db.data.menuItems = [
-        { id: "item_1", name: "بيتزا مارغريتا", category: "بيتزا", price: 25000, isAvailable: true, imageUrl: "https://placehold.co/300x200.png?text=بيتزا+مارغريتا" },
-        { id: "item_2", name: "برجر لحم", category: "سندويشات", price: 35000, isAvailable: true, imageUrl: "https://placehold.co/300x200.png?text=برجر+لحم" },
-        { id: "item_3", name: "سلطة دجاج", category: "سلطات", price: 22000, isAvailable: true, imageUrl: "https://placehold.co/300x200.png?text=سلطة+دجاج" },
-        { id: "item_4", name: "عصير برتقال", category: "مشروبات", price: 10000, isAvailable: true, imageUrl: "https://placehold.co/300x200.png?text=عصير+برتقال" },
-        { id: "item_5", name: "كولا", category: "مشروبات", price: 8000, isAvailable: true, imageUrl: "https://placehold.co/300x200.png?text=كولا" },
-        { id: "item_6", name: "كيك الشوكولاتة", category: "حلويات", price: 18000, isAvailable: false, imageUrl: "https://placehold.co/300x200.png?text=كيك+شوكولاتة" },
-        { id: "item_7", name: "فروج مشوي", category: "أطباق رئيسية", price: 75000, isAvailable: true, imageUrl: "https://placehold.co/300x200.png?text=فروج+مشوي" },
-        { id: "item_8", name: "شاورما دجاج", category: "سندويشات", price: 20000, isAvailable: true, imageUrl: "https://placehold.co/300x200.png?text=شاورما+دجاج" },
-        { id: "item_9", name: "فتوش", category: "سلطات", price: 15000, isAvailable: true, imageUrl: "https://placehold.co/300x200.png?text=فتوش" },
-        { id: "item_10", name: "ماء معدني", category: "مشروبات", price: 3000, isAvailable: true, imageUrl: "https://placehold.co/300x200.png?text=ماء" }
-      ];
-  }
-  if (db.data.orders === undefined) {
-    db.data.orders = [];
-  }
+  if (!db.data.menuItems) db.data.menuItems = [];
+  if (!db.data.orders) db.data.orders = [];
   if (db.data.lastOrderId === undefined) {
-    // If there are existing orders but no lastOrderId, try to infer it.
-    // This is a simple inference, might need adjustment for complex scenarios.
     db.data.lastOrderId = db.data.orders.reduce((maxId, order) => Math.max(maxId, typeof order.id === 'number' ? order.id : 0), 0);
   }
+  if (!db.data.users) db.data.users = [];
+  if (db.data.users.length === 0) {
+    // Add a default admin user if no users exist (ONLY for initial setup)
+    // In a real app, password should be hashed securely. This is a placeholder for simplicity.
+    db.data.users.push({ id: 'admin_user', username: 'admin', passwordHash: 'password', role: 'admin' });
+  }
+  if (!db.data.appSettings) db.data.appSettings = { restaurantName: "ريستو سويفت الافتراضي" };
+  if (!db.data.expenses) db.data.expenses = [];
+  
   db.write();
 
 } catch (error) {
   console.error("Failed to initialize LowDB:", error);
+  // Fallback DB in case of error
+  const fallbackData: DBData = {
+    menuItems: [
+      { id: 'fallback_1', name: 'Fallback Item 1 (Error in DB init)', category: 'Fallback', price: 10000, isAvailable: true },
+    ],
+    orders: [],
+    lastOrderId: 0,
+    users: [{ id: 'admin_user_fallback', username: 'admin', passwordHash: 'password', role: 'admin' }],
+    appSettings: { restaurantName: "Fallback Restaurant Name" },
+    expenses: [],
+  };
   db = {
     // @ts-ignore
-    data: {
-      menuItems: [
-        { id: 'fallback_1', name: 'Fallback Item 1 (Error in DB init)', category: 'Fallback', price: 10000, isAvailable: true },
-      ],
-      orders: [],
-      lastOrderId: 0,
-    },
+    data: fallbackData,
     read: () => {},
     write: () => { console.error("DB write operation failed due to initialization error.")},
   };
