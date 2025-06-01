@@ -4,7 +4,7 @@
 import React, { useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react'; // For loading indicator
+import { Loader2 } from 'lucide-react';
 
 export default function AdminLayout({
   children,
@@ -15,13 +15,13 @@ export default function AdminLayout({
   const router = useRouter();
 
   useEffect(() => {
-    // If auth check is complete (isLoading is false)
-    // AND (there's no current user OR the user is not an admin)
-    // THEN redirect to login page.
-    if (!isLoading && (!currentUser || currentUser.role !== 'admin')) {
-      router.push('/login');
+    // Only attempt to redirect if loading is complete
+    if (!isLoading) {
+      if (!currentUser || currentUser.role !== 'admin') {
+        router.push('/login');
+      }
     }
-  }, [currentUser, isLoading, router]); // Effect dependencies
+  }, [currentUser, isLoading, router]);
 
   if (isLoading) {
     return (
@@ -32,13 +32,13 @@ export default function AdminLayout({
     );
   }
 
-  // If, after loading, there's still no admin user,
-  // the useEffect should have initiated a redirect.
-  // Returning null here prevents rendering children if the redirect is pending or if something went wrong.
+  // After loading, if still not an admin (e.g., redirect is in progress or user is not admin),
+  // return null to prevent rendering admin content.
+  // The useEffect above should handle the redirect.
   if (!currentUser || currentUser.role !== 'admin') {
     return null; 
   }
 
-  // If loading is false AND currentUser is an admin, render the children (admin page content)
+  // Only render children if loading is complete AND user is an admin
   return <div className="w-full">{children}</div>;
 }

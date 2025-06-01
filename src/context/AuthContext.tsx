@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import { loginAction, getRestaurantNameAction, type User as DbUser, type AppSettings } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 
-// Define a cleaner User type for the context, excluding passwordHash
 export interface User {
   id: string;
   username: string;
@@ -15,22 +14,20 @@ export interface User {
 
 interface AuthContextType {
   currentUser: User | null;
-  isLoading: boolean; // Combined loading state
+  isLoading: boolean;
   login: (usernameInput: string, passwordInput: string) => Promise<boolean>;
   logout: () => void;
   restaurantName: string;
   fetchRestaurantName: () => Promise<void>;
-  setRestaurantNameState: (name: string) => void; // For updating name from settings page
+  setRestaurantNameState: (name: string) => void;
 }
 
-// Provide a default context value that matches the AuthContextType structure
-// This helps prevent errors if a component tries to access the context before it's fully initialized.
 const defaultAuthContextValue: AuthContextType = {
   currentUser: null,
-  isLoading: true,
+  isLoading: true, // Start as true, will be false after initial check
   login: async () => false,
   logout: () => {},
-  restaurantName: "ريستو سويفت POS", // Initial default
+  restaurantName: "ريستو سويفت POS",
   fetchRestaurantName: async () => {},
   setRestaurantNameState: () => {},
 };
@@ -39,9 +36,10 @@ const AuthContext = createContext<AuthContextType>(defaultAuthContextValue);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [isAuthLoading, setIsAuthLoading] = useState(true); // Specific for auth operations
-  const [isRestaurantNameLoading, setIsRestaurantNameLoading] = useState(true); // Specific for name fetching
-  const [isProcessingAuth, startAuthTransition] = useTransition();
+  const [isAuthCheckComplete, setIsAuthCheckComplete] = useState(false); // Tracks completion of localStorage check
+  const [isRestaurantNameLoading, setIsRestaurantNameLoading] = useState(true);
+  const [isProcessingAuthAction, startAuthActionTransition] = useTransition(); // For login/logout server actions
+
   const [restaurantName, setRestaurantName] = useState<string>(defaultAuthContextValue.restaurantName);
   const router = useRouter();
   const { toast } = useToast();
@@ -53,7 +51,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setRestaurantName(name);
     } catch (error) {
       console.error("Failed to fetch restaurant name:", error);
-      // Keep default or last known name if already set, otherwise use the initial default
       setRestaurantName(prev => prev || defaultAuthContextValue.restaurantName);
     } finally {
       setIsRestaurantNameLoading(false);
@@ -61,7 +58,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   useEffect(() => {
-    setIsAuthLoading(true);
     const storedUser = localStorage.getItem('currentUser');
     if (storedUser) {
       try {
@@ -70,12 +66,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } catch (e) {
         console.error("Failed to parse stored user:", e);
         localStorage.removeItem('currentUser');
-        setCurrentUser(null); // Ensure currentUser is null if parsing fails
+        setCurrentUser(null);
       }
     } else {
-        setCurrentUser(null); // Ensure currentUser is null if not in localStorage
+      setCurrentUser(null);
     }
-    setIsAuthLoading(false);
+    setIsAuthCheckComplete(true); // Mark initial auth check as complete
   }, []);
 
   useEffect(() => {
@@ -84,7 +80,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = useCallback(async (usernameInput: string, passwordInput: string): Promise<boolean> => {
     return new Promise((resolve) => {
-      startAuthTransition(async () => {
+      startAuthActionTransition(async () => {
         const result = await loginAction(usernameInput, passwordInput);
         if ('error' in result) {
           toast({ title: "خطأ في تسجيل الدخول", description: result.error, variant: "destructive" });
@@ -100,10 +96,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setCurrentUser(userToStore);
           localStorage.setItem('currentUser', JSON.stringify(userToStore));
           toast({ title: "تم تسجيل الدخول بنجاح", description: `مرحباً ${result.username}!` });
-          // Re-fetch restaurant name in case it was changed by another admin or process
-          // Although, with the current setup, only this user can change it via settings.
-          // But it's good practice if settings could be influenced externally.
-          fetchRestaurantName(); 
+          await fetchRestaurantName(); 
           if (result.role === 'admin') {
             router.push('/admin/menu');
           } else {
@@ -116,11 +109,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [router, toast, fetchRestaurantName]);
 
   const logout = useCallback(() => {
-    startAuthTransition(() => {
-        setCurrentUser(null);
-        localStorage.removeItem('currentUser');
-        router.push('/login');
-        toast({ title: "تم تسجيل الخروج بنجاح" });
+    startAuthActionTransition(() => {
+      setCurrentUser(null);
+      localStorage.removeItem('currentUser');
+      router.push('/login');
+      toast({ title: "تم تسجيل الخروج بنجاح" });
     });
   }, [router, toast]);
 
@@ -128,8 +121,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setRestaurantName(name);
   };
 
-  // Combined loading state
-  const isLoading = isAuthLoading || isRestaurantNameLoading || isProcessingAuth;
+  // isLoading is true if initial auth check isn't complete OR restaurant name is loading OR an auth action is processing
+  const isLoading = !isAuthCheckComplete || isRestaurantNameLoading || isProcessingAuthAction;
 
   const contextValue = {
     currentUser,
@@ -150,7 +143,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) { // This check should ideally catch the issue
+  if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
