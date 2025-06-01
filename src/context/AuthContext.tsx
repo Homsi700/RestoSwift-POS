@@ -15,36 +15,53 @@ export interface User {
 
 interface AuthContextType {
   currentUser: User | null;
-  isLoading: boolean;
+  isLoading: boolean; // Combined loading state
   login: (usernameInput: string, passwordInput: string) => Promise<boolean>;
   logout: () => void;
   restaurantName: string;
   fetchRestaurantName: () => Promise<void>;
-  setRestaurantNameState: (name: string) => void;
+  setRestaurantNameState: (name: string) => void; // For updating name from settings page
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Provide a default context value that matches the AuthContextType structure
+// This helps prevent errors if a component tries to access the context before it's fully initialized.
+const defaultAuthContextValue: AuthContextType = {
+  currentUser: null,
+  isLoading: true,
+  login: async () => false,
+  logout: () => {},
+  restaurantName: "ريستو سويفت POS", // Initial default
+  fetchRestaurantName: async () => {},
+  setRestaurantNameState: () => {},
+};
+
+const AuthContext = createContext<AuthContextType>(defaultAuthContextValue);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isProcessingAuth, startAuthTransition] = useTransition(); // General transition for login/logout
-  const [restaurantName, setRestaurantName] = useState<string>("ريستو سويفت POS"); // Default
+  const [isAuthLoading, setIsAuthLoading] = useState(true); // Specific for auth operations
+  const [isRestaurantNameLoading, setIsRestaurantNameLoading] = useState(true); // Specific for name fetching
+  const [isProcessingAuth, startAuthTransition] = useTransition();
+  const [restaurantName, setRestaurantName] = useState<string>(defaultAuthContextValue.restaurantName);
   const router = useRouter();
   const { toast } = useToast();
 
   const fetchRestaurantName = useCallback(async () => {
+    setIsRestaurantNameLoading(true);
     try {
       const name = await getRestaurantNameAction();
       setRestaurantName(name);
     } catch (error) {
       console.error("Failed to fetch restaurant name:", error);
-      // Keep default or last known name
+      // Keep default or last known name if already set, otherwise use the initial default
+      setRestaurantName(prev => prev || defaultAuthContextValue.restaurantName);
+    } finally {
+      setIsRestaurantNameLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    setIsLoading(true);
+    setIsAuthLoading(true);
     const storedUser = localStorage.getItem('currentUser');
     if (storedUser) {
       try {
@@ -53,11 +70,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } catch (e) {
         console.error("Failed to parse stored user:", e);
         localStorage.removeItem('currentUser');
+        setCurrentUser(null); // Ensure currentUser is null if parsing fails
       }
+    } else {
+        setCurrentUser(null); // Ensure currentUser is null if not in localStorage
     }
-    fetchRestaurantName().finally(() => {
-      setIsLoading(false);
-    });
+    setIsAuthLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchRestaurantName();
   }, [fetchRestaurantName]);
 
   const login = useCallback(async (usernameInput: string, passwordInput: string): Promise<boolean> => {
@@ -78,6 +100,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setCurrentUser(userToStore);
           localStorage.setItem('currentUser', JSON.stringify(userToStore));
           toast({ title: "تم تسجيل الدخول بنجاح", description: `مرحباً ${result.username}!` });
+          // Re-fetch restaurant name in case it was changed by another admin or process
+          // Although, with the current setup, only this user can change it via settings.
+          // But it's good practice if settings could be influenced externally.
+          fetchRestaurantName(); 
           if (result.role === 'admin') {
             router.push('/admin/menu');
           } else {
@@ -87,7 +113,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       });
     });
-  }, [router, toast]);
+  }, [router, toast, fetchRestaurantName]);
 
   const logout = useCallback(() => {
     startAuthTransition(() => {
@@ -102,16 +128,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setRestaurantName(name);
   };
 
+  // Combined loading state
+  const isLoading = isAuthLoading || isRestaurantNameLoading || isProcessingAuth;
+
+  const contextValue = {
+    currentUser,
+    isLoading,
+    login,
+    logout,
+    restaurantName,
+    fetchRestaurantName,
+    setRestaurantNameState,
+  };
+
   return (
-    <AuthContext.Provider value={{ 
-        currentUser, 
-        isLoading: isLoading || isProcessingAuth, 
-        login, 
-        logout, 
-        restaurantName, 
-        fetchRestaurantName, 
-        setRestaurantNameState 
-    }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
@@ -119,7 +150,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (context === undefined) { // This check should ideally catch the issue
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;

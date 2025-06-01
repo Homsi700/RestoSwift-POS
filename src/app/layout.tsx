@@ -4,7 +4,8 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import Header from '@/components/layout/Header';
 import { MenuProvider } from '@/context/MenuContext';
-import { ThemeProvider } from '@/components/ThemeProvider'; // Import ThemeProvider
+import { AuthProvider } from '@/context/AuthContext'; // Ensure this import is correct
+import { ThemeProvider } from '@/components/ThemeProvider';
 
 export const metadata: Metadata = {
   title: 'ريستو سويفت POS',
@@ -30,13 +31,15 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <MenuProvider>
-            <Header />
-            <main className="flex-grow container mx-auto px-4 py-8">
-              {children}
-            </main>
-            <Toaster />
-          </MenuProvider>
+          <AuthProvider> {/* AuthProvider should be high enough to wrap everything needing auth */}
+            <MenuProvider>
+              <Header />
+              <main className="flex-grow container mx-auto px-4 py-8">
+                {children}
+              </main>
+              <Toaster />
+            </MenuProvider>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
