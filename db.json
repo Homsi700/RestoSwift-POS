@@ -365,17 +365,5 @@
       "paymentMethod": "cash"
     }
   ],
-  "lastOrderId": 8,
-  "users": [
-    {
-      "id": "admin_user",
-      "username": "admin",
-      "passwordHash": "password",
-      "role": "admin"
-    }
-  ],
-  "appSettings": {
-    "restaurantName": "ريستو سويفت POS"
-  },
-  "expenses": []
+  "lastOrderId": 8
 }

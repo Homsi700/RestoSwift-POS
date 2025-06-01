@@ -2,7 +2,7 @@
 // src/app/actions.ts
 'use server';
 
-import { db, type MenuItem, type OrderItem, type Order, type User, type AppSettings, type Expense } from '@/lib/db';
+import { db, type MenuItem, type OrderItem, type Order } from '@/lib/db'; // Removed User, AppSettings, Expense
 import { nanoid } from 'nanoid'; 
 
 // --- Menu Item Actions ---
@@ -62,7 +62,7 @@ export async function deleteMenuItemAction(id: string): Promise<{ success: boole
 }
 
 // --- Order Actions ---
-export async function completeOrderAndPrint(orderItems: OrderItem[], userId?: string): Promise<Order | { error: string }> {
+export async function completeOrderAndPrint(orderItems: OrderItem[] /*, userId?: string Removed userId */): Promise<Order | { error: string }> {
   if (!orderItems || orderItems.length === 0) {
     return { error: "لا يمكن أن يكون الطلب فارغًا." };
   }
@@ -80,7 +80,7 @@ export async function completeOrderAndPrint(orderItems: OrderItem[], userId?: st
     totalAmount: totalAmount,
     status: 'completed',
     paymentMethod: 'cash', 
-    userId: userId 
+    // userId: userId // Removed userId
   };
 
   try {
@@ -170,78 +170,13 @@ export async function getItemSalesCountReport(startDate?: number, endDate?: numb
   return report;
 }
 
-// --- Auth Actions ---
-export async function loginAction(username: string, passwordAttempt: string): Promise<User | { error: string }> {
-  db.read();
-  const user = db.data.users.find(u => u.username === username);
-  if (!user) {
-    return { error: "اسم المستخدم أو كلمة المرور غير صحيحة." };
-  }
-  // IMPORTANT: This is NOT secure password comparison. 
-  // In a real app, use bcrypt.compare(passwordAttempt, user.passwordHash)
-  if (user.passwordHash === passwordAttempt) { 
-    const { passwordHash, ...userWithoutPassword } = user;
-    return userWithoutPassword;
-  }
-  return { error: "اسم المستخدم أو كلمة المرور غير صحيحة." };
-}
+// --- Auth Actions Removed ---
+// export async function loginAction(username: string, passwordAttempt: string): Promise<User | { error: string }> { ... }
+// export async function getRestaurantNameAction(): Promise<string> { ... }
+// export async function updateRestaurantNameAction(newName: string): Promise<AppSettings | { error: string }> { ... }
 
-// --- App Settings Actions ---
-export async function getRestaurantNameAction(): Promise<string> {
-    db.read();
-    return db.data.appSettings?.restaurantName || "مطعمي";
-}
+// --- Expense Actions Removed ---
+// export async function addExpenseAction(expenseData: Omit<Expense, 'id' | 'date'>): Promise<Expense> { ... }
+// export async function getExpensesAction(startDate?: number, endDate?: number): Promise<Expense[]> { ... }
+// export async function deleteExpenseAction(id: string): Promise<{ success: boolean; message?: string }> { ... }
 
-export async function updateRestaurantNameAction(newName: string): Promise<AppSettings | { error: string }> {
-    db.read();
-    if (!newName.trim()) {
-        return { error: "اسم المطعم لا يمكن أن يكون فارغًا." };
-    }
-    db.data.appSettings.restaurantName = newName.trim();
-    db.write();
-    return db.data.appSettings;
-}
-
-
-// --- Expense Actions ---
-export async function addExpenseAction(expenseData: Omit<Expense, 'id' | 'date'>): Promise<Expense> {
-  db.read();
-  const newExpense: Expense = {
-    id: nanoid(),
-    description: expenseData.description,
-    amount: expenseData.amount,
-    category: expenseData.category,
-    date: Date.now(),
-  };
-  db.data.expenses.push(newExpense);
-  db.write();
-  return newExpense;
-}
-
-export async function getExpensesAction(startDate?: number, endDate?: number): Promise<Expense[]> {
-  db.read();
-  let expensesToReturn = db.data.expenses || [];
-
-  if (startDate && endDate) {
-    expensesToReturn = expensesToReturn.filter(expense => 
-      expense.date >= startDate && expense.date <= endDate
-    );
-  } else if (startDate) {
-    expensesToReturn = expensesToReturn.filter(expense => expense.date >= startDate);
-  } else if (endDate) {
-    expensesToReturn = expensesToReturn.filter(expense => expense.date <= endDate);
-  }
-  // Sort by date, newest first
-  return expensesToReturn.sort((a, b) => b.date - a.date);
-}
-
-export async function deleteExpenseAction(id: string): Promise<{ success: boolean; message?: string }> {
-  db.read();
-  const initialLength = db.data.expenses.length;
-  db.data.expenses = db.data.expenses.filter(expense => expense.id !== id);
-  if (db.data.expenses.length < initialLength) {
-    db.write();
-    return { success: true };
-  }
-  return { success: false, message: "لم يتم العثور على المصروف." };
-}

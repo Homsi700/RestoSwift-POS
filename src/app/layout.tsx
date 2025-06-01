@@ -4,7 +4,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import Header from '@/components/layout/Header';
 import { MenuProvider } from '@/context/MenuContext';
-import { AuthProvider } from '@/context/AuthContext'; // Ensure this import is correct
+// import { AuthProvider } from '@/context/AuthContext'; // Removed AuthProvider
 import { ThemeProvider } from '@/components/ThemeProvider';
 
 export const metadata: Metadata = {
@@ -31,7 +31,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <AuthProvider> {/* AuthProvider should be high enough to wrap everything needing auth */}
+          {/* <AuthProvider> Removed AuthProvider wrapper */}
             <MenuProvider>
               <Header />
               <main className="flex-grow container mx-auto px-4 py-8">
@@ -39,7 +39,7 @@ export default function RootLayout({
               </main>
               <Toaster />
             </MenuProvider>
-          </AuthProvider>
+          {/* </AuthProvider> */}
         </ThemeProvider>
       </body>
     </html>
