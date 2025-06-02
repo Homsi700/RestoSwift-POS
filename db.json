@@ -510,10 +510,58 @@
       "totalAmount": 222500,
       "status": "completed",
       "paymentMethod": "cash"
+    },
+    {
+      "id": 12,
+      "timestamp": 1748901741484,
+      "items": [
+        {
+          "menuItemId": "8cU6mxBvx2uto-EP7IXzu",
+          "name": "شاورما دبل",
+          "price": 15000,
+          "quantity": 1
+        },
+        {
+          "menuItemId": "item_2",
+          "name": "برجر لحم",
+          "price": 35000,
+          "quantity": 1
+        },
+        {
+          "menuItemId": "IJ7MtsEAN8QT5tRE8i65U",
+          "name": "فاهيتا وجبة",
+          "price": 30000,
+          "quantity": 1
+        },
+        {
+          "menuItemId": "XsRMkYDn-uyyztD5yym-_",
+          "name": "فاهيتا صمون",
+          "price": 25000,
+          "quantity": 1
+        }
+      ],
+      "totalAmount": 105000,
+      "status": "completed",
+      "paymentMethod": "cash"
     }
   ],
-  "lastOrderId": 11,
-  "expenses": [],
+  "lastOrderId": 12,
+  "expenses": [
+    {
+      "id": "VgCV_DvFnTHc7eY5dM_1C",
+      "date": 1748901661429,
+      "description": "دفع فاتورة مياه",
+      "amount": 20000,
+      "category": "فاتورة"
+    },
+    {
+      "id": "c2ZLrTzIcjtK2lnCHOchk",
+      "date": 1748901681212,
+      "description": "دفع فاتورة كهرباء",
+      "amount": 50000,
+      "category": "فاتورة"
+    }
+  ],
   "appSettings": {
     "restaurantName": "مطعمي"
   }

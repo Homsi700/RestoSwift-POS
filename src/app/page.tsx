@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, useTransition, useCallback } from 'react';
-import { getMenuItems, completeOrderAndPrint } from './actions';
+import { getMenuItems, completeOrderAndPrint, getRestaurantNameAction } from './actions';
 import type { MenuItem, OrderItem, Order } from '@/lib/db';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,7 @@ import { Loader2 } from 'lucide-react';
 export default function POSPage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [currentOrderItems, setCurrentOrderItems] = useState<OrderItem[]>([]);
+  const [restaurantName, setRestaurantName] = useState<string>("ريستو سويفت POS"); // Default name
   const [isFetchingMenu, startFetchingMenuTransition] = useTransition();
   const [isCompletingOrder, startCompletingOrderTransition] = useTransition();
   const { toast } = useToast();
@@ -33,9 +34,20 @@ export default function POSPage() {
     });
   }, [toast]);
 
+  const fetchRestaurantName = useCallback(async () => {
+    try {
+      const name = await getRestaurantNameAction();
+      setRestaurantName(name);
+    } catch (error) {
+      console.error("Failed to fetch restaurant name for POS:", error);
+      // Keep default name or set a fallback, toast is optional here
+    }
+  }, []);
+
   useEffect(() => {
     fetchMenu();
-  }, [fetchMenu]);
+    fetchRestaurantName();
+  }, [fetchMenu, fetchRestaurantName]);
 
   const handleAddItemToOrder = useCallback((item: MenuItem) => {
     setCurrentOrderItems((prevOrderItems) => {
@@ -75,7 +87,7 @@ export default function POSPage() {
     return currentOrderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   }, [currentOrderItems]);
 
-  const printReceipt = (order: Order) => {
+  const printReceipt = (order: Order, currentRestaurantName: string) => {
     const printWindow = window.open('', '_blank', 'height=600,width=400');
     if (printWindow) {
       printWindow.document.write('<html><head><title>فاتورة طلب</title>');
@@ -171,10 +183,7 @@ export default function POSPage() {
       printWindow.document.write('</style></head><body>');
       
       printWindow.document.write('<div class="receipt-header">');
-      printWindow.document.write('<h1>ريستو سويفت</h1>'); 
-      // Add more details like address or phone if needed
-      // printWindow.document.write('<p>شارع الحمرا، دمشق</p>');
-      // printWindow.document.write('<p>هاتف: 011-1234567</p>');
+      printWindow.document.write(`<h1>${currentRestaurantName || 'ريستو سويفت POS'}</h1>`); 
       printWindow.document.write('</div>');
 
       printWindow.document.write('<hr class="separator">');
@@ -203,8 +212,6 @@ export default function POSPage() {
       printWindow.document.write('</tbody></table>');
       
       printWindow.document.write('<div class="totals-section">');
-      // You can add subtotal, tax, discount here if needed in the future
-      // printWindow.document.write(`<div><span>المجموع الفرعي:</span> <span>${order.totalAmount.toLocaleString('ar-SY')} ل.س</span></div>`);
       printWindow.document.write(`<div><span>الإجمالي للدفع:</span> <span>${order.totalAmount.toLocaleString('ar-SY')} ل.س</span></div>`);
       printWindow.document.write('</div>');
 
@@ -217,11 +224,8 @@ export default function POSPage() {
       printWindow.document.close();
       printWindow.focus();
       
-      // Delay print slightly to ensure content is fully rendered in the new window
       setTimeout(() => {
         printWindow.print();
-        // Optionally close the window after printing, but some users might want to keep it open
-        // printWindow.close(); 
       }, 250); 
 
     } else {
@@ -248,11 +252,11 @@ export default function POSPage() {
           title: "تم إرسال الطلب بنجاح!",
           description: `رقم الفاتورة: ${result.id}. الإجمالي: ${result.totalAmount.toLocaleString('ar-SY')} ل.س.`,
         });
-        printReceipt(result);
+        printReceipt(result, restaurantName); // Pass the fetched restaurant name
         setCurrentOrderItems([]);
       }
     });
-  }, [currentOrderItems, toast]);
+  }, [currentOrderItems, toast, restaurantName]); // Added restaurantName to dependencies
 
   const totalAmount = calculateTotalAmount();
 
@@ -364,5 +368,6 @@ export default function POSPage() {
     </div>
   );
 }
+    
 
     
