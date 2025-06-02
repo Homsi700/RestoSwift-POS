@@ -543,9 +543,114 @@
       "totalAmount": 105000,
       "status": "completed",
       "paymentMethod": "cash"
+    },
+    {
+      "id": 13,
+      "timestamp": 1748903059071,
+      "items": [
+        {
+          "menuItemId": "item_7",
+          "name": "فروج مشوي",
+          "price": 75000,
+          "quantity": 1
+        },
+        {
+          "menuItemId": "item_2",
+          "name": "برجر لحم",
+          "price": 35000,
+          "quantity": 1
+        },
+        {
+          "menuItemId": "5wROILtTrZO8KLn4mxO-E",
+          "name": "بطاطا عادي",
+          "price": 8500,
+          "quantity": 1
+        }
+      ],
+      "totalAmount": 118500,
+      "status": "completed",
+      "paymentMethod": "cash"
+    },
+    {
+      "id": 14,
+      "timestamp": 1748903248315,
+      "items": [
+        {
+          "menuItemId": "IJ7MtsEAN8QT5tRE8i65U",
+          "name": "فاهيتا وجبة",
+          "price": 30000,
+          "quantity": 1
+        },
+        {
+          "menuItemId": "XsRMkYDn-uyyztD5yym-_",
+          "name": "فاهيتا صمون",
+          "price": 25000,
+          "quantity": 1
+        },
+        {
+          "menuItemId": "item_8",
+          "name": "شاورما دجاج",
+          "price": 20000,
+          "quantity": 1
+        },
+        {
+          "menuItemId": "item_7",
+          "name": "فروج مشوي",
+          "price": 75000,
+          "quantity": 1
+        },
+        {
+          "menuItemId": "5wROILtTrZO8KLn4mxO-E",
+          "name": "بطاطا عادي",
+          "price": 8500,
+          "quantity": 1
+        }
+      ],
+      "totalAmount": 158500,
+      "status": "completed",
+      "paymentMethod": "cash"
+    },
+    {
+      "id": 15,
+      "timestamp": 1748903265866,
+      "items": [
+        {
+          "menuItemId": "item_2",
+          "name": "برجر لحم",
+          "price": 35000,
+          "quantity": 3
+        },
+        {
+          "menuItemId": "IJ7MtsEAN8QT5tRE8i65U",
+          "name": "فاهيتا وجبة",
+          "price": 30000,
+          "quantity": 1
+        },
+        {
+          "menuItemId": "XsRMkYDn-uyyztD5yym-_",
+          "name": "فاهيتا صمون",
+          "price": 25000,
+          "quantity": 1
+        },
+        {
+          "menuItemId": "item_8",
+          "name": "شاورما دجاج",
+          "price": 20000,
+          "quantity": 2
+        },
+        {
+          "menuItemId": "5wROILtTrZO8KLn4mxO-E",
+          "name": "بطاطا عادي",
+          "price": 8500,
+          "quantity": 8
+        }
+      ],
+      "totalAmount": 268000,
+      "status": "completed",
+      "paymentMethod": "cash"
     }
   ],
-  "lastOrderId": 12,
+  "lastOrderId": 15,
   "expenses": [
     {
       "id": "VgCV_DvFnTHc7eY5dM_1C",

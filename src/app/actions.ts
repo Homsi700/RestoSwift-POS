@@ -3,11 +3,41 @@
 'use server';
 
 import { db, type MenuItem, type OrderItem, type Order, type Expense, type AppSettings } from '@/lib/db';
-import { nanoid } from 'nanoid'; 
+import type { User } from '@/types';
+import { nanoid } from 'nanoid';
+// import { z } from 'zod'; // z is now imported via LoginCredentialsSchema
+import { LoginCredentialsSchema, type LoginCredentials } from '@/lib/schemas';
+
+
+// --- Auth Types and Actions ---
+// LoginCredentialsSchema and LoginCredentials are now imported from @/lib/schemas
+
+// HARDCODED ADMIN USER FOR NOW
+const ADMIN_USER: User = {
+  id: 'admin-user-id',
+  username: 'admin',
+  role: 'admin',
+};
+const ADMIN_PASSWORD = 'admin';
+
+
+export async function loginAction(credentials: LoginCredentials): Promise<{ success: boolean; user?: User; error?: string }> {
+  try {
+    LoginCredentialsSchema.parse(credentials); // Validate input
+  } catch (e) {
+    return { success: false, error: "بيانات الإدخال غير صالحة." };
+  }
+
+  if (credentials.username === ADMIN_USER.username && credentials.password === ADMIN_PASSWORD) {
+    return { success: true, user: ADMIN_USER };
+  }
+  return { success: false, error: "اسم المستخدم أو كلمة المرور غير صحيحة." };
+}
+
 
 // --- Menu Item Actions ---
 export async function getMenuItems(onlyAvailable: boolean = true): Promise<MenuItem[]> {
-  db.read(); 
+  db.read();
   if (onlyAvailable) {
     return db.data.menuItems.filter(item => item.isAvailable);
   }
@@ -16,7 +46,7 @@ export async function getMenuItems(onlyAvailable: boolean = true): Promise<MenuI
 
 export async function addMenuItemAction(itemData: Omit<MenuItem, 'id' | 'isAvailable' | 'imageUrl'>): Promise<MenuItem> {
   const newItem: MenuItem = {
-    id: nanoid(), 
+    id: nanoid(),
     name: itemData.name,
     price: itemData.price,
     category: itemData.category,
@@ -69,22 +99,22 @@ export async function completeOrderAndPrint(orderItems: OrderItem[]): Promise<Or
 
   const totalAmount = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  db.read(); 
+  db.read();
 
   const newOrderId = (db.data.lastOrderId || 0) + 1;
 
   const newOrder: Order = {
-    id: newOrderId, 
+    id: newOrderId,
     timestamp: Date.now(),
     items: orderItems,
     totalAmount: totalAmount,
     status: 'completed',
-    paymentMethod: 'cash', 
+    paymentMethod: 'cash',
   };
 
   try {
     db.data.orders.push(newOrder);
-    db.data.lastOrderId = newOrderId; 
+    db.data.lastOrderId = newOrderId;
     db.write();
     return newOrder;
   } catch (e: any) {
@@ -97,7 +127,7 @@ export async function completeOrderAndPrint(orderItems: OrderItem[]): Promise<Or
 export interface DailySalesReportData {
   totalSales: number;
   numberOfInvoices: number;
-  date: string; 
+  date: string;
 }
 
 export interface ItemSalesReportItem {
@@ -138,12 +168,12 @@ export async function getItemSalesCountReport(startDate?: number, endDate?: numb
   let ordersToProcess = db.data.orders || [];
 
   if (startDate && endDate) {
-    ordersToProcess = ordersToProcess.filter(order => 
+    ordersToProcess = ordersToProcess.filter(order =>
       order.timestamp >= startDate && order.timestamp <= endDate
     );
-  } else if (startDate) { 
+  } else if (startDate) {
     ordersToProcess = ordersToProcess.filter(order => order.timestamp >= startDate);
-  } else if (endDate) { 
+  } else if (endDate) {
     ordersToProcess = ordersToProcess.filter(order => order.timestamp <= endDate);
   }
 
@@ -154,7 +184,7 @@ export async function getItemSalesCountReport(startDate?: number, endDate?: numb
       if (itemSalesMap[item.name]) {
         itemSalesMap[item.name] += item.quantity;
       } else {
-        itemSalesMap[item.name] = item.name;
+        itemSalesMap[item.name] = item.quantity; // Corrected: should be item.quantity not item.name
       }
     });
   });
@@ -189,7 +219,7 @@ export async function getExpensesAction(startDate?: number, endDate?: number): P
   let expensesToProcess = db.data.expenses || [];
 
   if (startDate && endDate) {
-    expensesToProcess = expensesToProcess.filter(expense => 
+    expensesToProcess = expensesToProcess.filter(expense =>
       expense.date >= startDate && expense.date <= endDate
     );
   } else if (startDate) {

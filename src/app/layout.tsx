@@ -4,7 +4,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import Header from '@/components/layout/Header';
 import { MenuProvider } from '@/context/MenuContext';
-// import { AuthProvider } from '@/context/AuthContext'; // Removed AuthProvider
+import { AuthProvider } from '@/context/AuthContext'; 
 import { ThemeProvider } from '@/components/ThemeProvider';
 
 export const metadata: Metadata = {
@@ -31,7 +31,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {/* <AuthProvider> Removed AuthProvider wrapper */}
+          <AuthProvider>
             <MenuProvider>
               <Header />
               <main className="flex-grow container mx-auto px-4 py-8">
@@ -39,7 +39,7 @@ export default function RootLayout({
               </main>
               <Toaster />
             </MenuProvider>
-          {/* </AuthProvider> */}
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
