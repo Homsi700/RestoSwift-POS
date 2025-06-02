@@ -6,8 +6,9 @@
 // or define UI-specific variations.
 export type { MenuItem, OrderItem, Order, Expense, AppSettings } from '@/lib/db';
 
+// This User type is for AuthContext and client-side, does NOT include password
 export interface User {
   id: string;
   username: string;
-  role: 'admin' | 'cashier'; // For now, only admin will be implemented
+  role: 'admin' | 'cashier';
 }

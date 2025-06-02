@@ -1,8 +1,10 @@
+
 // src/lib/db.ts
 import { join, dirname } from 'path';
 import { LowSync } from 'lowdb';
-import { JSONFileSync } from 'lowdb/node'; 
+import { JSONFileSync } from 'lowdb/node';
 import { fileURLToPath } from 'url';
+import type { User as AppUser } from '@/types'; // Renaming to avoid conflict
 
 export interface MenuItem {
   id: string;
@@ -21,8 +23,8 @@ export interface OrderItem {
 }
 
 export interface Order {
-  id: number; 
-  timestamp: number; 
+  id: number;
+  timestamp: number;
   items: OrderItem[];
   totalAmount: number;
   status: 'pending' | 'completed' | 'cancelled';
@@ -33,12 +35,20 @@ export interface Expense {
   id: string;
   description: string;
   amount: number;
-  date: number; 
+  date: number;
   category?: string;
 }
 
 export interface AppSettings {
   restaurantName: string;
+}
+
+// This User type is for DB storage, includes password
+export interface User {
+  id: string;
+  username: string;
+  password?: string; // Storing plain text for now
+  role: 'admin' | 'cashier';
 }
 
 interface DBData {
@@ -47,6 +57,7 @@ interface DBData {
   lastOrderId: number;
   expenses: Expense[];
   appSettings: AppSettings;
+  users: User[]; // Added users array
 }
 
 let db: LowSync<DBData>;
@@ -62,17 +73,19 @@ try {
     lastOrderId: 0,
     expenses: [],
     appSettings: { restaurantName: "ريستو سويفت POS" },
+    users: [], // Default empty users array
   });
 
   db.read();
 
   if (!db.data) {
-    db.data = { 
-        menuItems: [], 
-        orders: [], 
+    db.data = {
+        menuItems: [],
+        orders: [],
         lastOrderId: 0,
         expenses: [],
-        appSettings: { restaurantName: "ريستو سويفت الافتراضي" }
+        appSettings: { restaurantName: "ريستو سويفت الافتراضي" },
+        users: [],
     };
   }
   if (!db.data.menuItems) db.data.menuItems = [];
@@ -82,7 +95,21 @@ try {
   }
   if (!db.data.expenses) db.data.expenses = [];
   if (!db.data.appSettings) db.data.appSettings = { restaurantName: "ريستو سويفت الافتراضي" };
-  
+  if (!db.data.users) {
+    db.data.users = [];
+  }
+
+  // Ensure there's at least one admin user
+  if (db.data.users.length === 0 || !db.data.users.find(u => u.role === 'admin')) {
+    const adminUser: User = {
+      id: 'default-admin',
+      username: 'admin',
+      password: 'admin', // Plain text for now
+      role: 'admin',
+    };
+    db.data.users.push(adminUser);
+  }
+
   db.write();
 
 } catch (error) {
@@ -95,6 +122,7 @@ try {
     lastOrderId: 0,
     expenses: [],
     appSettings: { restaurantName: "مطعم الخطأ" },
+    users: [{ id: 'fallback-admin', username: 'admin', password: 'admin', role: 'admin' }],
   };
   db = {
     // @ts-ignore
@@ -105,3 +133,4 @@ try {
 }
 
 export { db };
+export type { User as DBUser }; // Exporting the DB-specific User type

@@ -2,36 +2,88 @@
 // src/app/actions.ts
 'use server';
 
-import { db, type MenuItem, type OrderItem, type Order, type Expense, type AppSettings } from '@/lib/db';
-import type { User } from '@/types';
+import { db, type MenuItem, type OrderItem, type Order, type Expense, type AppSettings, type DBUser } from '@/lib/db';
+import type { User as AuthUser } from '@/types'; // User for AuthContext (no password)
 import { nanoid } from 'nanoid';
-// import { z } from 'zod'; // z is now imported via LoginCredentialsSchema
-import { LoginCredentialsSchema, type LoginCredentials } from '@/lib/schemas';
-
+import { LoginCredentialsSchema, type LoginCredentials, AddUserSchema, type AddUserFormValues } from '@/lib/schemas';
 
 // --- Auth Types and Actions ---
-// LoginCredentialsSchema and LoginCredentials are now imported from @/lib/schemas
 
-// HARDCODED ADMIN USER FOR NOW
-const ADMIN_USER: User = {
-  id: 'admin-user-id',
-  username: 'admin',
-  role: 'admin',
-};
-const ADMIN_PASSWORD = 'admin';
-
-
-export async function loginAction(credentials: LoginCredentials): Promise<{ success: boolean; user?: User; error?: string }> {
+export async function loginAction(credentials: LoginCredentials): Promise<{ success: boolean; user?: AuthUser; error?: string }> {
   try {
-    LoginCredentialsSchema.parse(credentials); // Validate input
+    LoginCredentialsSchema.parse(credentials);
   } catch (e) {
     return { success: false, error: "بيانات الإدخال غير صالحة." };
   }
 
-  if (credentials.username === ADMIN_USER.username && credentials.password === ADMIN_PASSWORD) {
-    return { success: true, user: ADMIN_USER };
+  db.read();
+  const userFromDb = db.data.users.find(
+    (u) => u.username === credentials.username && u.password === credentials.password // Plain text comparison for now
+  );
+
+  if (userFromDb) {
+    // Return user object without password
+    const authUser: AuthUser = {
+      id: userFromDb.id,
+      username: userFromDb.username,
+      role: userFromDb.role,
+    };
+    return { success: true, user: authUser };
   }
   return { success: false, error: "اسم المستخدم أو كلمة المرور غير صحيحة." };
+}
+
+// --- User Management Actions ---
+export async function getUsersAction(): Promise<AuthUser[]> {
+  db.read();
+  // Return users without passwords
+  return db.data.users.map(({ password, ...userWithoutPassword }) => userWithoutPassword);
+}
+
+export async function addUserAction(userData: AddUserFormValues): Promise<{ success: boolean; user?: AuthUser; error?: string }> {
+  try {
+    AddUserSchema.parse(userData);
+  } catch (e: any) {
+    return { success: false, error: "بيانات إدخال المستخدم غير صالحة: " + e.errors.map((err:any) => err.message).join(', ') };
+  }
+
+  db.read();
+  if (db.data.users.find(u => u.username === userData.username)) {
+    return { success: false, error: "اسم المستخدم موجود بالفعل." };
+  }
+
+  const newUser: DBUser = {
+    id: nanoid(),
+    username: userData.username,
+    password: userData.password, // Storing plain text for now
+    role: userData.role,
+  };
+
+  db.data.users.push(newUser);
+  db.write();
+
+  const { password, ...authUser } = newUser; // Exclude password for return
+  return { success: true, user: authUser };
+}
+
+export async function deleteUserAction(id: string): Promise<{ success: boolean; error?: string }> {
+  db.read();
+  const userToDelete = db.data.users.find(u => u.id === id);
+
+  if (!userToDelete) {
+    return { success: false, error: "المستخدم غير موجود." };
+  }
+  // Basic check: do not delete the last admin user
+  if (userToDelete.role === 'admin') {
+    const adminUsers = db.data.users.filter(u => u.role === 'admin');
+    if (adminUsers.length <= 1) {
+      return { success: false, error: "لا يمكن حذف آخر مستخدم بصلاحية مدير." };
+    }
+  }
+
+  db.data.users = db.data.users.filter(u => u.id !== id);
+  db.write();
+  return { success: true };
 }
 
 
@@ -54,7 +106,7 @@ export async function addMenuItemAction(itemData: Omit<MenuItem, 'id' | 'isAvail
   };
   db.read();
   db.data.menuItems.push(newItem);
-  db.write();
+  await db.write();
   return newItem;
 }
 
@@ -63,7 +115,7 @@ export async function updateMenuItemAction(updatedItem: MenuItem): Promise<MenuI
   const itemIndex = db.data.menuItems.findIndex(item => item.id === updatedItem.id);
   if (itemIndex > -1) {
     db.data.menuItems[itemIndex] = { ...db.data.menuItems[itemIndex], ...updatedItem };
-    db.write();
+    await db.write();
     return db.data.menuItems[itemIndex];
   }
   return null;
@@ -74,7 +126,7 @@ export async function toggleMenuItemAvailabilityAction(id: string): Promise<Menu
   const itemIndex = db.data.menuItems.findIndex(item => item.id === id);
   if (itemIndex > -1) {
     db.data.menuItems[itemIndex].isAvailable = !db.data.menuItems[itemIndex].isAvailable;
-    db.write();
+    await db.write();
     return db.data.menuItems[itemIndex];
   }
   return null;
@@ -85,7 +137,7 @@ export async function deleteMenuItemAction(id: string): Promise<{ success: boole
   const initialLength = db.data.menuItems.length;
   db.data.menuItems = db.data.menuItems.filter(item => item.id !== id);
   if (db.data.menuItems.length < initialLength) {
-    db.write();
+    await db.write();
     return { success: true };
   }
   return { success: false, message: "لم يتم العثور على العنصر." };
@@ -115,7 +167,7 @@ export async function completeOrderAndPrint(orderItems: OrderItem[]): Promise<Or
   try {
     db.data.orders.push(newOrder);
     db.data.lastOrderId = newOrderId;
-    db.write();
+    await db.write();
     return newOrder;
   } catch (e: any) {
     console.error("Error saving order to DB:", e);
@@ -150,7 +202,7 @@ export async function getDailySalesReport(): Promise<DailySalesReportData> {
 
   const totalSales = dailyOrders.reduce((sum, order) => sum + order.totalAmount, 0);
   const numberOfInvoices = dailyOrders.length;
-  
+
   const year = today.getFullYear();
   const month = (today.getMonth() + 1).toString().padStart(2, '0');
   const day = today.getDate().toString().padStart(2, '0');
@@ -184,7 +236,7 @@ export async function getItemSalesCountReport(startDate?: number, endDate?: numb
       if (itemSalesMap[item.name]) {
         itemSalesMap[item.name] += item.quantity;
       } else {
-        itemSalesMap[item.name] = item.quantity; // Corrected: should be item.quantity not item.name
+        itemSalesMap[item.name] = item.quantity;
       }
     });
   });
@@ -210,7 +262,7 @@ export async function addExpenseAction(expenseData: Omit<Expense, 'id' | 'date'>
   };
   db.read();
   db.data.expenses.push(newExpense);
-  db.write();
+  await db.write();
   return newExpense;
 }
 
@@ -227,7 +279,6 @@ export async function getExpensesAction(startDate?: number, endDate?: number): P
   } else if (endDate) {
     expensesToProcess = expensesToProcess.filter(expense => expense.date <= endDate);
   }
-  // Sort by date descending
   expensesToProcess.sort((a, b) => b.date - a.date);
   return expensesToProcess;
 }
@@ -237,7 +288,7 @@ export async function deleteExpenseAction(id: string): Promise<{ success: boolea
   const initialLength = db.data.expenses.length;
   db.data.expenses = db.data.expenses.filter(expense => expense.id !== id);
   if (db.data.expenses.length < initialLength) {
-    db.write();
+    await db.write();
     return { success: true };
   }
   return { success: false, message: "لم يتم العثور على المصروف." };
@@ -259,6 +310,6 @@ export async function updateRestaurantNameAction(newName: string): Promise<AppSe
   } else {
     db.data.appSettings.restaurantName = newName.trim();
   }
-  db.write();
+  await db.write();
   return db.data.appSettings;
 }
