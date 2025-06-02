@@ -38,6 +38,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { Label } from '@/components/ui/label'; // Added import for Label
 import {
   AlertDialog,
   AlertDialogAction,
