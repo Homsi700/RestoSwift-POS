@@ -1,4 +1,3 @@
-
 // src/lib/db.ts
 import { join, dirname } from 'path';
 import { LowSync } from 'lowdb';
@@ -28,38 +27,26 @@ export interface Order {
   totalAmount: number;
   status: 'pending' | 'completed' | 'cancelled';
   paymentMethod?: 'cash' | 'card' | 'online' | 'other';
-  // userId?: string; // Removed userId as auth is removed
 }
 
-// User interface removed
-// export interface User {
-//   id: string;
-//   username: string;
-//   passwordHash: string; 
-//   role: 'admin' | 'cashier';
-// }
+export interface Expense {
+  id: string;
+  description: string;
+  amount: number;
+  date: number; 
+  category?: string;
+}
 
-// AppSettings interface removed
-// export interface AppSettings {
-//   restaurantName: string;
-// }
-
-// Expense interface removed
-// export interface Expense {
-//   id: string;
-//   description: string;
-//   amount: number;
-//   date: number; 
-//   category?: string;
-// }
+export interface AppSettings {
+  restaurantName: string;
+}
 
 interface DBData {
   menuItems: MenuItem[];
   orders: Order[];
   lastOrderId: number;
-  // users: User[]; // Removed users
-  // appSettings: AppSettings; // Removed appSettings
-  // expenses: Expense[]; // Removed expenses
+  expenses: Expense[];
+  appSettings: AppSettings;
 }
 
 let db: LowSync<DBData>;
@@ -73,9 +60,8 @@ try {
     menuItems: [],
     orders: [],
     lastOrderId: 0,
-    // users: [], // Removed default users
-    // appSettings: { restaurantName: "RestoSwift POS" }, // Removed default appSettings
-    // expenses: [], // Removed default expenses
+    expenses: [],
+    appSettings: { restaurantName: "ريستو سويفت POS" },
   });
 
   db.read();
@@ -85,9 +71,8 @@ try {
         menuItems: [], 
         orders: [], 
         lastOrderId: 0,
-        // users: [], 
-        // appSettings: { restaurantName: "RestoSwift POS Default" },
-        // expenses: []
+        expenses: [],
+        appSettings: { restaurantName: "ريستو سويفت الافتراضي" }
     };
   }
   if (!db.data.menuItems) db.data.menuItems = [];
@@ -95,12 +80,8 @@ try {
   if (db.data.lastOrderId === undefined) {
     db.data.lastOrderId = db.data.orders.reduce((maxId, order) => Math.max(maxId, typeof order.id === 'number' ? order.id : 0), 0);
   }
-  // if (!db.data.users) db.data.users = [];
-  // if (db.data.users.length === 0) {
-  //   db.data.users.push({ id: 'admin_user', username: 'admin', passwordHash: 'password', role: 'admin' });
-  // }
-  // if (!db.data.appSettings) db.data.appSettings = { restaurantName: "ريستو سويفت الافتراضي" };
-  // if (!db.data.expenses) db.data.expenses = [];
+  if (!db.data.expenses) db.data.expenses = [];
+  if (!db.data.appSettings) db.data.appSettings = { restaurantName: "ريستو سويفت الافتراضي" };
   
   db.write();
 
@@ -112,9 +93,8 @@ try {
     ],
     orders: [],
     lastOrderId: 0,
-    // users: [{ id: 'admin_user_fallback', username: 'admin', passwordHash: 'password', role: 'admin' }],
-    // appSettings: { restaurantName: "Fallback Restaurant Name" },
-    // expenses: [],
+    expenses: [],
+    appSettings: { restaurantName: "مطعم الخطأ" },
   };
   db = {
     // @ts-ignore

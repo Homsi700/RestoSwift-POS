@@ -2,7 +2,7 @@
 // src/app/actions.ts
 'use server';
 
-import { db, type MenuItem, type OrderItem, type Order } from '@/lib/db'; // Removed User, AppSettings, Expense
+import { db, type MenuItem, type OrderItem, type Order, type Expense, type AppSettings } from '@/lib/db';
 import { nanoid } from 'nanoid'; 
 
 // --- Menu Item Actions ---
@@ -62,7 +62,7 @@ export async function deleteMenuItemAction(id: string): Promise<{ success: boole
 }
 
 // --- Order Actions ---
-export async function completeOrderAndPrint(orderItems: OrderItem[] /*, userId?: string Removed userId */): Promise<Order | { error: string }> {
+export async function completeOrderAndPrint(orderItems: OrderItem[]): Promise<Order | { error: string }> {
   if (!orderItems || orderItems.length === 0) {
     return { error: "لا يمكن أن يكون الطلب فارغًا." };
   }
@@ -80,7 +80,6 @@ export async function completeOrderAndPrint(orderItems: OrderItem[] /*, userId?:
     totalAmount: totalAmount,
     status: 'completed',
     paymentMethod: 'cash', 
-    // userId: userId // Removed userId
   };
 
   try {
@@ -155,7 +154,7 @@ export async function getItemSalesCountReport(startDate?: number, endDate?: numb
       if (itemSalesMap[item.name]) {
         itemSalesMap[item.name] += item.quantity;
       } else {
-        itemSalesMap[item.name] = item.quantity;
+        itemSalesMap[item.name] = item.name;
       }
     });
   });
@@ -170,13 +169,66 @@ export async function getItemSalesCountReport(startDate?: number, endDate?: numb
   return report;
 }
 
-// --- Auth Actions Removed ---
-// export async function loginAction(username: string, passwordAttempt: string): Promise<User | { error: string }> { ... }
-// export async function getRestaurantNameAction(): Promise<string> { ... }
-// export async function updateRestaurantNameAction(newName: string): Promise<AppSettings | { error: string }> { ... }
+// --- Expense Actions ---
+export async function addExpenseAction(expenseData: Omit<Expense, 'id' | 'date'>): Promise<Expense> {
+  const newExpense: Expense = {
+    id: nanoid(),
+    date: Date.now(),
+    description: expenseData.description,
+    amount: expenseData.amount,
+    category: expenseData.category,
+  };
+  db.read();
+  db.data.expenses.push(newExpense);
+  db.write();
+  return newExpense;
+}
 
-// --- Expense Actions Removed ---
-// export async function addExpenseAction(expenseData: Omit<Expense, 'id' | 'date'>): Promise<Expense> { ... }
-// export async function getExpensesAction(startDate?: number, endDate?: number): Promise<Expense[]> { ... }
-// export async function deleteExpenseAction(id: string): Promise<{ success: boolean; message?: string }> { ... }
+export async function getExpensesAction(startDate?: number, endDate?: number): Promise<Expense[]> {
+  db.read();
+  let expensesToProcess = db.data.expenses || [];
 
+  if (startDate && endDate) {
+    expensesToProcess = expensesToProcess.filter(expense => 
+      expense.date >= startDate && expense.date <= endDate
+    );
+  } else if (startDate) {
+    expensesToProcess = expensesToProcess.filter(expense => expense.date >= startDate);
+  } else if (endDate) {
+    expensesToProcess = expensesToProcess.filter(expense => expense.date <= endDate);
+  }
+  // Sort by date descending
+  expensesToProcess.sort((a, b) => b.date - a.date);
+  return expensesToProcess;
+}
+
+export async function deleteExpenseAction(id: string): Promise<{ success: boolean; message?: string }> {
+  db.read();
+  const initialLength = db.data.expenses.length;
+  db.data.expenses = db.data.expenses.filter(expense => expense.id !== id);
+  if (db.data.expenses.length < initialLength) {
+    db.write();
+    return { success: true };
+  }
+  return { success: false, message: "لم يتم العثور على المصروف." };
+}
+
+// --- AppSettings Actions ---
+export async function getRestaurantNameAction(): Promise<string> {
+  db.read();
+  return db.data.appSettings?.restaurantName || "ريستو سويفت POS";
+}
+
+export async function updateRestaurantNameAction(newName: string): Promise<AppSettings | { error: string }> {
+  if (!newName || newName.trim().length < 2) {
+    return { error: "اسم المطعم يجب أن يتكون من حرفين على الأقل." };
+  }
+  db.read();
+  if (!db.data.appSettings) {
+    db.data.appSettings = { restaurantName: newName };
+  } else {
+    db.data.appSettings.restaurantName = newName.trim();
+  }
+  db.write();
+  return db.data.appSettings;
+}

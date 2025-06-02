@@ -512,5 +512,9 @@
       "paymentMethod": "cash"
     }
   ],
-  "lastOrderId": 11
+  "lastOrderId": 11,
+  "expenses": [],
+  "appSettings": {
+    "restaurantName": "ريستو سويفت POS"
+  }
 }
