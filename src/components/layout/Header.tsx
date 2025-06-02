@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Utensils, BarChartBig, DollarSign, SettingsIcon, LogIn, LogOut, UserCircle } from 'lucide-react'; 
+import { Utensils, BarChartBig, DollarSign, SettingsIcon, LogIn, LogOut, UserCircle, Loader2 } from 'lucide-react'; 
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { useEffect, useState, useTransition } from 'react';
