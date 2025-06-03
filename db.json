@@ -676,6 +676,12 @@
       "username": "admin",
       "password": "admin",
       "role": "admin"
+    },
+    {
+      "id": "n80VpIbeyu3AFMnp5BHlZ",
+      "username": "nabil",
+      "password": "700210",
+      "role": "admin"
     }
   ]
 }
