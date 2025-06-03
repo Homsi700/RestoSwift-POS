@@ -10,46 +10,62 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import MenuItemCardComponent from '@/components/MenuItemCard'; 
+import MenuItemCardComponent from '@/components/MenuItemCard';
 import { PlusIcon, MinusIcon, TrashIcon, PrinterIcon, ShoppingBagIcon } from '@heroicons/react/24/outline';
 import { Loader2 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
 
 export default function POSPage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [currentOrderItems, setCurrentOrderItems] = useState<OrderItem[]>([]);
-  const [restaurantName, setRestaurantName] = useState<string>("ريستو سويفت POS"); // Default name
+  const [restaurantName, setRestaurantName] = useState<string>("ريستو سويفت POS");
   const [isFetchingMenu, startFetchingMenuTransition] = useTransition();
   const [isCompletingOrder, startCompletingOrderTransition] = useTransition();
   const { toast } = useToast();
 
+  const { currentUser, isLoading: isAuthLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isAuthLoading && !currentUser) {
+      router.push('/login');
+    }
+  }, [currentUser, isAuthLoading, router]);
+
   const fetchMenu = useCallback(() => {
+    if (!currentUser) return; // Don't fetch if no user (though redirect should happen)
     startFetchingMenuTransition(async () => {
       try {
-        const items = await getMenuItems(true); 
+        const items = await getMenuItems(true);
         setMenuItems(items);
       } catch (error) {
         console.error("Failed to fetch menu items:", error);
         toast({ title: "خطأ", description: "فشل تحميل قائمة الطعام.", variant: "destructive" });
       }
     });
-  }, [toast]);
+  }, [toast, currentUser]);
 
   const fetchRestaurantName = useCallback(async () => {
+    if (!currentUser) return;
     try {
       const name = await getRestaurantNameAction();
       setRestaurantName(name);
     } catch (error) {
       console.error("Failed to fetch restaurant name for POS:", error);
-      // Keep default name or set a fallback, toast is optional here
     }
-  }, []);
+  }, [currentUser]);
 
   useEffect(() => {
-    fetchMenu();
-    fetchRestaurantName();
-  }, [fetchMenu, fetchRestaurantName]);
+    if (currentUser) {
+      fetchMenu();
+      fetchRestaurantName();
+    }
+  }, [fetchMenu, fetchRestaurantName, currentUser]);
 
   const handleAddItemToOrder = useCallback((item: MenuItem) => {
+    const itemExistedBeforeUpdate = currentOrderItems.some(oi => oi.menuItemId === item.id);
+
     setCurrentOrderItems((prevOrderItems) => {
       const existingItem = prevOrderItems.find(oi => oi.menuItemId === item.id);
       if (existingItem) {
@@ -57,20 +73,24 @@ export default function POSPage() {
           oi.menuItemId === item.id ? { ...oi, quantity: oi.quantity + 1 } : oi
         );
       }
+      return [...prevOrderItems, { menuItemId: item.id, name: item.name, price: item.price, quantity: 1 }];
+    });
+
+    if (!itemExistedBeforeUpdate) {
       toast({
         title: `تمت إضافة ${item.name}`,
         description: `السعر: ${item.price.toLocaleString('ar-SY')} ل.س`,
         duration: 2000,
       });
-      return [...prevOrderItems, { menuItemId: item.id, name: item.name, price: item.price, quantity: 1 }];
-    });
-  }, [toast]);
+    }
+  }, [currentOrderItems, toast, setCurrentOrderItems]);
+
 
   const handleUpdateQuantity = useCallback((itemId: string, delta: number) => {
     setCurrentOrderItems((prevOrderItems) => {
       const updatedOrder = prevOrderItems.map(item =>
         item.menuItemId === itemId
-          ? { ...item, quantity: Math.max(0, item.quantity + delta) } 
+          ? { ...item, quantity: Math.max(0, item.quantity + delta) }
           : item
       );
       return updatedOrder.filter(item => item.quantity > 0);
@@ -94,48 +114,48 @@ export default function POSPage() {
       printWindow.document.write('<style>');
       printWindow.document.write(`
         @media print {
-          @page { 
-            margin: 5mm; 
+          @page {
+            margin: 5mm;
             size: 80mm auto; /* Common thermal printer width */
-          } 
+          }
         }
-        body { 
+        body {
           font-family: 'Courier New', Courier, monospace; /* Monospaced font for alignment */
-          font-size: 10pt; 
+          font-size: 10pt;
           margin: 0;
           padding: 5mm;
           direction: rtl;
           text-align: right;
           color: #000; /* Ensure text is black */
         }
-        .receipt-header { 
-          text-align: center; 
-          margin-bottom: 10px; 
+        .receipt-header {
+          text-align: center;
+          margin-bottom: 10px;
         }
-        .receipt-header h1 { 
+        .receipt-header h1 {
           font-size: 16pt; /* Larger restaurant name */
           font-weight: bold;
-          margin: 0 0 5px 0; 
+          margin: 0 0 5px 0;
         }
-        .receipt-header p { 
-          font-size: 8pt; 
-          margin: 2px 0; 
+        .receipt-header p {
+          font-size: 8pt;
+          margin: 2px 0;
         }
         .order-details p {
           font-size: 9pt;
           margin: 3px 0;
         }
-        table { 
-          width: 100%; 
-          border-collapse: collapse; 
-          margin-top: 10px; 
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 10px;
         }
-        th, td { 
+        th, td {
           padding: 4px 2px; /* Increased padding */
-          font-size: 9pt; 
+          font-size: 9pt;
           text-align: right; /* Align text to right for Arabic */
         }
-        th { 
+        th {
           border-bottom: 1px solid #000; /* Solid line for header separation */
           font-weight: bold;
         }
@@ -149,45 +169,45 @@ export default function POSPage() {
         .item-qty { width: 15%; text-align: center; }
         .item-price { width: 20%; text-align: left; } /* Price aligned left */
         .item-total { width: 20%; text-align: left; } /* Total aligned left */
-        
-        .totals-section { 
-          margin-top: 15px; 
+
+        .totals-section {
+          margin-top: 15px;
           border-top: 2px solid #000; /* Double solid line before totals */
-          padding-top: 8px; 
+          padding-top: 8px;
         }
-        .totals-section div { 
-          display: flex; 
-          justify-content: space-between; 
-          font-size: 10pt; 
-          margin-bottom: 4px; 
+        .totals-section div {
+          display: flex;
+          justify-content: space-between;
+          font-size: 10pt;
+          margin-bottom: 4px;
         }
-        .totals-section div span:first-child { 
-          font-weight: normal; 
+        .totals-section div span:first-child {
+          font-weight: normal;
           text-align: right;
         }
-        .totals-section div span:last-child { 
-          font-weight: bold; 
+        .totals-section div span:last-child {
+          font-weight: bold;
           text-align: left;
         }
-        .footer-message { 
-          text-align: center; 
-          margin-top: 20px; 
-          font-size: 9pt; 
+        .footer-message {
+          text-align: center;
+          margin-top: 20px;
+          font-size: 9pt;
         }
-        hr.separator { 
-          border: none; 
-          border-top: 1px dashed #555; 
-          margin: 8px 0; 
+        hr.separator {
+          border: none;
+          border-top: 1px dashed #555;
+          margin: 8px 0;
         }
       `);
       printWindow.document.write('</style></head><body>');
-      
+
       printWindow.document.write('<div class="receipt-header">');
-      printWindow.document.write(`<h1>${currentRestaurantName || 'ريستو سويفت POS'}</h1>`); 
+      printWindow.document.write(`<h1>${currentRestaurantName || 'ريستو سويفت POS'}</h1>`);
       printWindow.document.write('</div>');
 
       printWindow.document.write('<hr class="separator">');
-      
+
       printWindow.document.write('<div class="order-details">');
       printWindow.document.write(`<p>رقم الفاتورة: ${order.id}</p>`);
       printWindow.document.write(`<p>التاريخ: ${new Date(order.timestamp).toLocaleDateString('ar-SY', { year: 'numeric', month: 'short', day: 'numeric' })}</p>`);
@@ -195,11 +215,11 @@ export default function POSPage() {
       printWindow.document.write('</div>');
 
       printWindow.document.write('<hr class="separator">');
-      
+
       printWindow.document.write('<table><thead><tr>');
       printWindow.document.write('<th class="item-name">الصنف</th><th class="item-qty">الكمية</th><th class="item-price">السعر</th><th class="item-total">الإجمالي</th>');
       printWindow.document.write('</tr></thead><tbody>');
-      
+
       order.items.forEach(item => {
         printWindow.document.write('<tr>');
         printWindow.document.write(`<td class="item-name">${item.name}</td>`);
@@ -208,25 +228,25 @@ export default function POSPage() {
         printWindow.document.write(`<td class="item-total">${(item.price * item.quantity).toLocaleString('ar-SY')}</td>`);
         printWindow.document.write('</tr>');
       });
-      
+
       printWindow.document.write('</tbody></table>');
-      
+
       printWindow.document.write('<div class="totals-section">');
       printWindow.document.write(`<div><span>الإجمالي للدفع:</span> <span>${order.totalAmount.toLocaleString('ar-SY')} ل.س</span></div>`);
       printWindow.document.write('</div>');
 
       printWindow.document.write('<hr class="separator" style="margin-top: 15px;">');
-      
+
       printWindow.document.write('<p class="footer-message">شكراً لزيارتكم!</p>');
       printWindow.document.write('<p class="footer-message">نتمنى لكم يوماً سعيداً</p>');
-      
+
       printWindow.document.write('</body></html>');
       printWindow.document.close();
       printWindow.focus();
-      
+
       setTimeout(() => {
         printWindow.print();
-      }, 250); 
+      }, 250);
 
     } else {
       toast({ title: "خطأ في الطباعة", description: "لم يتمكن المتصفح من فتح نافذة الطباعة.", variant: "destructive" });
@@ -252,13 +272,24 @@ export default function POSPage() {
           title: "تم إرسال الطلب بنجاح!",
           description: `رقم الفاتورة: ${result.id}. الإجمالي: ${result.totalAmount.toLocaleString('ar-SY')} ل.س.`,
         });
-        printReceipt(result, restaurantName); // Pass the fetched restaurant name
+        printReceipt(result, restaurantName);
         setCurrentOrderItems([]);
       }
     });
-  }, [currentOrderItems, toast, restaurantName]); // Added restaurantName to dependencies
+  }, [currentOrderItems, toast, restaurantName, setCurrentOrderItems]);
 
   const totalAmount = calculateTotalAmount();
+
+  if (isAuthLoading || !currentUser) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-var(--header-height,80px))] w-full">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="mt-4 rtl:mr-4 text-lg text-muted-foreground">
+          {isAuthLoading ? 'جاري تحميل بيانات المستخدم...' : 'إعادة التوجيه لتسجيل الدخول...'}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-var(--header-height,80px))] max-h-[calc(100vh-var(--header-height,80px))]">
@@ -273,9 +304,9 @@ export default function POSPage() {
           <ScrollArea className="flex-grow -me-2 pe-2 min-h-0">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3">
               {menuItems.map((item) => (
-                <MenuItemCardComponent 
-                  key={item.id} 
-                  item={item} 
+                <MenuItemCardComponent
+                  key={item.id}
+                  item={item}
                   onClick={handleAddItemToOrder}
                 />
               ))}
@@ -299,7 +330,7 @@ export default function POSPage() {
           </CardTitle>
         </CardHeader>
         <Separator className="mb-4" />
-        
+
         {currentOrderItems.length === 0 ? (
           <div className="flex-grow flex items-center justify-center">
             <p className="text-muted-foreground text-center py-10">الفاتورة فارغة. أضف أصنافًا من القائمة.</p>
@@ -325,7 +356,7 @@ export default function POSPage() {
                             if (!isNaN(newQuantity) && newQuantity >= 0) {
                                 handleUpdateQuantity(item.menuItemId, newQuantity - item.quantity);
                             } else if (e.target.value === '') {
-                                handleUpdateQuantity(item.menuItemId, -item.quantity); // Treat empty as zero
+                                handleUpdateQuantity(item.menuItemId, -item.quantity);
                             }
                         }}
                         className="w-10 h-7 text-center px-1 text-sm"
@@ -344,16 +375,16 @@ export default function POSPage() {
             </div>
           </ScrollArea>
         )}
-        
+
         <CardFooter className="flex flex-col gap-3 p-0 pt-4 border-t">
           <div className="w-full flex justify-between items-center text-lg">
             <span className="font-semibold">الإجمالي:</span>
             <span className="font-bold text-primary">{totalAmount.toLocaleString('ar-SY')} ل.س</span>
           </div>
-          <Button 
-            onClick={handleCheckout} 
+          <Button
+            onClick={handleCheckout}
             disabled={isCompletingOrder || currentOrderItems.length === 0}
-            className="w-full text-base py-3" 
+            className="w-full text-base py-3"
             size="lg"
           >
             {isCompletingOrder ? (
@@ -368,6 +399,3 @@ export default function POSPage() {
     </div>
   );
 }
-    
-
-    
