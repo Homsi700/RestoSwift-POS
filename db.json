@@ -648,9 +648,66 @@
       "totalAmount": 268000,
       "status": "completed",
       "paymentMethod": "cash"
+    },
+    {
+      "id": 16,
+      "timestamp": 1748969970695,
+      "items": [
+        {
+          "menuItemId": "item_2",
+          "name": "برجر لحم",
+          "price": 35000,
+          "quantity": 1
+        },
+        {
+          "menuItemId": "item_7",
+          "name": "فروج مشوي",
+          "price": 75000,
+          "quantity": 1
+        },
+        {
+          "menuItemId": "item_8",
+          "name": "شاورما دجاج",
+          "price": 20000,
+          "quantity": 1
+        },
+        {
+          "menuItemId": "5wROILtTrZO8KLn4mxO-E",
+          "name": "بطاطا عادي",
+          "price": 8500,
+          "quantity": 1
+        },
+        {
+          "menuItemId": "imf38oIw9hLsrUjyWk55X",
+          "name": "بطاطا دبل",
+          "price": 14000,
+          "quantity": 1
+        },
+        {
+          "menuItemId": "IJ7MtsEAN8QT5tRE8i65U",
+          "name": "فاهيتا وجبة",
+          "price": 30000,
+          "quantity": 1
+        },
+        {
+          "menuItemId": "XsRMkYDn-uyyztD5yym-_",
+          "name": "فاهيتا صمون",
+          "price": 25000,
+          "quantity": 1
+        },
+        {
+          "menuItemId": "8cU6mxBvx2uto-EP7IXzu",
+          "name": "شاورما دبل",
+          "price": 15000,
+          "quantity": 1
+        }
+      ],
+      "totalAmount": 222500,
+      "status": "completed",
+      "paymentMethod": "cash"
     }
   ],
-  "lastOrderId": 15,
+  "lastOrderId": 16,
   "expenses": [
     {
       "id": "VgCV_DvFnTHc7eY5dM_1C",
@@ -668,7 +725,7 @@
     }
   ],
   "appSettings": {
-    "restaurantName": "مطعمي الفاخر جداً"
+    "restaurantName": "مطعمي"
   },
   "users": [
     {
